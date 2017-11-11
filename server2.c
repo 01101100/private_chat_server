@@ -4,28 +4,22 @@
 * created date:
 * last modified date:
 */
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
 
-#define MAX_CLIENTS 50
-#define MAX_NAME_LEN 30
-#define MAX_LINE 100      // length buffer
-#define PORT 100
-#define LISTENQ 5  // use at line 39
-
-typedef struct{
-    int sockfd;
-    int partner_sockfd;
-    char name[MAX_NAME_LEN];
-} Client;
+#include "server.h"
 
 void main(){
     int i, maxi, listenfd, connfd;
     Client clients[MAX_CLIENTS];
     fd_set rset, allset;
+    int fd;
     char buf[MAX_LINE];
     socklen_t cli_len;
     struct sockaddr_in cliaddr, servaddr;
