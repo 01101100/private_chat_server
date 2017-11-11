@@ -23,8 +23,7 @@ typedef struct {
     int partner_sockfd;
     char name[MAX_NAME_LEN];
     int status; //-1 if none-partner 0 if pendding, 1 if connected.
-}
-Client;
+} Client;
 
 Client clients[MAX_CLIENTS];
 int maxi;
