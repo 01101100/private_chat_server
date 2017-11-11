@@ -14,9 +14,9 @@
 #include <netdb.h>
 
 #define MAX_CLIENTS 50
-# define MAX_NAME_LEN 30
-# define MSG_SIZE 1024
-# define SERV_PORT 9877
+#define MAX_NAME_LEN 30
+#define MSG_SIZE 1024
+#define SERV_PORT 9877
 
 typedef struct {
     int sockfd;
