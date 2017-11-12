@@ -14,16 +14,17 @@
 #include <netdb.h>
 
 #define MAX_CLIENTS 50
-#define MAX_NAME_LEN 30
-#define MSG_SIZE 1024
-#define SERV_PORT 9877
+# define MAX_NAME_LEN 30
+# define MSG_SIZE 1024
+# define SERV_PORT 9877
 
 typedef struct {
     int sockfd;
     int partner_sockfd;
     char name[MAX_NAME_LEN];
     int status; //-1 if none-partner 0 if pendding, 1 if connected.
-} Client;
+}
+Client;
 
 Client clients[MAX_CLIENTS];
 int maxi;
@@ -35,14 +36,14 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]);
 void exit_client(int sockfd);
 void process_keyboard_activity(char * cmd, int serer_sockfd);
 void init();
-void add_client(int sockfd);
+int add_client(int sockfd);
 void send_active_clients(int sockfd);
 int get_client_index(int sockfd);
 void pp(int index);
 
 void init() {
     int i;
-    maxi = 0;
+    maxi = -1;
     for (i = 0; i < MAX_CLIENTS; i++) {
         clients[i].sockfd = -1;
         clients[i].partner_sockfd = -1;
@@ -59,7 +60,7 @@ void process_keyboard_activity(char * cmd, int server_sockfd) {
     char msg[MSG_SIZE];
     if (strcmp(cmd, "quit") == 0) {
         sprintf(msg, "System: Server is shutting down.");
-        for (int i = 0; i < maxi; i++) { // send all client
+        for (int i = 0; i <= maxi; i++) { // send all client
             if (clients[i].sockfd > 0) {
                 send_message(clients[i].sockfd, msg);
                 close(clients[i].sockfd);
@@ -99,18 +100,27 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     char * first_str, * last_str;
     char msg[MSG_SIZE];
     int i = get_client_index(sockfd);
+    if(i == -1) {
+        printf("not found sockfd: %d\n", sockfd);
+        return;
+    }
     if (message[0] == '\\') {
         // xu ly xau
         first_str = strtok(message, " ");
         if (strcmp(first_str, "\\getonline") == 0) {
+            //debug:
+            printf("request \\getonline from %s-%d\n", clients[i].name, clients[i].sockfd);
             // get online user list 
-            // TODO
             send_active_clients(sockfd);
-        } else if (strcmp(first_str, "\name") == 0) {
+        } else if (strcmp(first_str, "\\name") == 0) {
+            //debug
+            printf("request \\name from %s-%d\n", clients[i].name, clients[i].sockfd);
             last_str = strtok(NULL, "");
             strcpy(clients[i].name, last_str);
 
         } else if (strcmp(first_str, "\\connect") == 0) { // connect
+            //debug
+            printf("request \\connect from %s-%d\n", clients[i].name, clients[i].sockfd);
             if (clients[i].status > 0) {
                 pp(i);
             }
@@ -122,6 +132,8 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             send_message(clients[i].partner_sockfd, msg);
         } else if (strcmp(first_str, "\\accept") == 0) { // accept
             // TODO:
+            //debug
+            printf("request \\accept from %s-%d\n", clients[i].name, clients[i].sockfd);
             last_str = strtok(NULL, "");
             int partner_sockfd = atoi(last_str);
             int partner_index = get_client_index(partner_sockfd);
@@ -137,6 +149,8 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
                 send_message(sockfd, "System: Nguoi nay khong yeu cau ghep doi voi ban. Bot ao tuong di ^^.");
             }
         } else if (strcmp(first_str, "\\decline") == 0) { // decline
+            //debug
+            printf("request \\decline from %s-%d\n", clients[i].name, clients[i].sockfd);
             // TODO:
             last_str = strtok(NULL, "");
             int partner = atoi(last_str);
@@ -149,8 +163,12 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             }
 
         } else if (strcmp(first_str, "\\pp") == 0) { // pp
+            //debug
+            printf("request \\pp from %s-%d\n", clients[i].name, clients[i].sockfd);
             pp(i);
         } else if (strcmp(first_str, "\\quit") == 0) { // quit
+            //debug
+            printf("request \\quit from %s-%d\n", clients[i].name, clients[i].sockfd);
             exit_client(sockfd);
         } else {
             send_message(sockfd, "System: Incorrect command!");
@@ -178,7 +196,7 @@ void send_message(int sockfd, char message[MSG_SIZE]) {
 
 void send_message_all(char message[MSG_SIZE]) {
     int i;
-    for (i = 0; i < maxi; i++) {
+    for (i = 0; i <= maxi; i++) {
         if (clients[i].sockfd > 0) {
             send_message(clients[i].sockfd, message);
         }
@@ -189,17 +207,20 @@ void send_message_all(char message[MSG_SIZE]) {
     add sockfd to allset
     add sockfd, name to clients
     */
-void add_client(int sockfd) {
+int add_client(int sockfd) {
     int i;
     for (i = 0; i < MAX_CLIENTS; i++) {
         if (clients[i].sockfd < 0) {
             clients[i].sockfd = sockfd;
+            sprintf(clients[i].name, "user_%d", sockfd);
             break;
         }
     }
     if (i == MAX_CLIENTS) perror("too many clients");
     FD_SET(sockfd, & allset); /* add new descriptor to set */
-    return;
+    //debug
+    printf("Them vao vi tri i = %d, sockfd = %d\n", i, clients[i].sockfd);
+    return i;
 }
 
 /**
@@ -208,7 +229,7 @@ return -1 if sockfd is not exist on clients list
 */
 int get_client_index(int sockfd) {
     int i;
-    for (i = 0; i < maxi; i++) {
+    for (i = 0; i <= maxi; i++) {
         if (clients[i].sockfd == sockfd) return i;
     }
     return -1;
@@ -220,8 +241,9 @@ send online user list to user
 void send_active_clients(int sockfd) {
     int i;
     char msg[MSG_SIZE];
-    sprintf(msg, "%-5s%-30s", "ID", "Name");
-    for (i = 0; i < maxi; i++) {
+    sprintf(msg, "%-5s%-30s\n", "ID", "Name");
+    send_message(sockfd, msg);
+    for (i = 0; i <= maxi; i++) {
         if (clients[i].sockfd > 0) {
             sprintf(msg, "%-5d%-30s\n", clients[i].sockfd, clients[i].name);
             send_message(sockfd, msg);
@@ -236,10 +258,14 @@ void send_active_clients(int sockfd) {
 void pp(int index) {
     int i = get_client_index(clients[index].partner_sockfd);
     char msg[MSG_SIZE];
-    sprintf(msg, "%s left the conversation.\n", clients[i].name);
+    sprintf(msg, "You left the conversation.\n");
+    send_message(clients[index].sockfd, msg);
+    sprintf(msg, "%s left the conversation.\n", clients[index].name);
     send_message(clients[index].partner_sockfd, msg);
     clients[i].partner_sockfd = -1;
+    clients[i].status = -1;
     clients[index].partner_sockfd = -1;
+    clients[index].status = -1;
     return;
 }
 
@@ -249,7 +275,7 @@ void pp(int index) {
  */
 int is_online(int sockfd) {
     int i;
-    for (i = 0; i < maxi; i++) {
+    for (i = 0; i <= maxi; i++) {
         if (sockfd == clients[i].sockfd) {}
     }
 }
@@ -283,13 +309,16 @@ void main(int argc, char * argv[]) {
         nready = select(maxfd + 1, & rset, NULL, NULL, NULL);
         /* new client connection */
         if (FD_ISSET(server_sockfd, & rset)) {
-            printf("%s\n", "System: New connection\n\n");
             client_sockfd = accept(server_sockfd, NULL, NULL);
+            printf("System: new connection from client_sockfd: %d\n\n", client_sockfd);
             /* save descriptor */
-            add_client(client_sockfd);
-            send_active_clients(client_sockfd);
+            i = add_client(client_sockfd);
+            
             if (client_sockfd > maxfd) maxfd = client_sockfd; /* */
             if (i > maxi) maxi = i; /* */
+            //debug
+            printf("maxi = %d\n", maxi);
+            send_active_clients(client_sockfd);
             if (--nready <= 0) continue; /* no more readable descriptors */
         }
 
@@ -301,11 +330,13 @@ void main(int argc, char * argv[]) {
             if (--nready <= 0) continue;
         }
 
-        for (i = 0; i < maxi; i++) {
-            if ((sockfd = clients[i].sockfd) <= 0) continue; // not set
-            if (FD_ISSET(clients[i].sockfd, & rset)) {
+        for (i = 0; i <= maxi; i++) {
+            sockfd = clients[i].sockfd;
+            if (sockfd <= 0) continue; // not set
+            if (FD_ISSET(sockfd, & rset)) {
                 /*Process Client specific activity*/
                 n = read(sockfd, msg, MSG_SIZE);
+                msg[n] = '\0';
                 if (n == -1) perror("read()");
                 else if (n == 0) exit_client(sockfd);
                 else {
