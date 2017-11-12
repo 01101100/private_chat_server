@@ -88,11 +88,12 @@ void exit_client(int sockfd) {
 }
 
 /**
+\help
 \getonline
 \name $name
-\connect $partner_id
-\accept $partner_id
-\decline $partner_id
+\connect $partner_sockfd
+\accept $partner_sockfd
+\decline $partner_sockfd
 \pp
 \quit
 */
@@ -107,33 +108,40 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     if (message[0] == '\\') {
         // xu ly xau
         first_str = strtok(message, " ");
-        if (strcmp(first_str, "\\getonline") == 0) {
+        if (strcmp(first_str, "\\help") == 0) {
+            sprintf(msg, "\n\n\\help : how to use command\n\\name : edit your name\n\\connect $partner_sockfd : request to connect with $partner_sockfd\n\\accept $partner_sockfd : accept request of $partner_sockfd\n\\decline $partner_sockfd : decline request of $partner_sockfd\n\\pp : left the conversation.\n\\quit : exit program, offline.\n");
+            send_message(sockfd, msg);
+        } else if (strcmp(first_str, "\\getonline") == 0) {
             //debug:
             printf("request \\getonline from %s-%d\n", clients[i].name, clients[i].sockfd);
             // get online user list 
             send_active_clients(sockfd);
         } else if (strcmp(first_str, "\\name") == 0) {
             //debug
-            printf("request \\name from %s-%d\n", clients[i].name, clients[i].sockfd);
+            printf("request \\name from %s-%d\n", 
+                    clients[i].name, clients[i].sockfd);
             last_str = strtok(NULL, "");
             strcpy(clients[i].name, last_str);
 
         } else if (strcmp(first_str, "\\connect") == 0) { // connect
             //debug
-            printf("request \\connect from %s-%d\n", clients[i].name, clients[i].sockfd);
+            printf("request \\connect from %s-%d\n", 
+                    clients[i].name, clients[i].sockfd);
             if (clients[i].status > 0) {
                 pp(i);
             }
             last_str = strtok(NULL, "");
             clients[i].partner_sockfd = atoi(last_str);
             clients[i].status = 0; // not connected
-            sprintf(msg, "System: Request chat from user: %s - %d", clients[i].name, clients[i].sockfd);
+            sprintf(msg, "System: Request chat from user: %s - %d", 
+                    clients[i].name, clients[i].sockfd);
             send_message(sockfd, "System: Send request successfull!");
             send_message(clients[i].partner_sockfd, msg);
         } else if (strcmp(first_str, "\\accept") == 0) { // accept
             // TODO:
             //debug
-            printf("request \\accept from %s-%d\n", clients[i].name, clients[i].sockfd);
+            printf("request \\accept from %s-%d\n", 
+                    clients[i].name, clients[i].sockfd);
             last_str = strtok(NULL, "");
             int partner_sockfd = atoi(last_str);
             int partner_index = get_client_index(partner_sockfd);
@@ -141,16 +149,19 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
                 clients[partner_index].status = 1;
                 clients[i].partner_sockfd = partner_sockfd;
                 clients[i].status = 1;
-                sprintf(msg, "System: Ban da chap nhan loi moi cua %s-%d", clients[partner_index].name, partner_sockfd);
+                sprintf(msg, "System: Ban da chap nhan loi moi cua %s-%d", 
+                        clients[partner_index].name, partner_sockfd);
                 send_message(sockfd, msg);
-                sprintf(msg, "System: %s-%d da chap nhan loi moi cua ban.", clients[i].name, sockfd);
+                sprintf(msg, "System: %s-%d da chap nhan loi moi cua ban.", 
+                        clients[i].name, sockfd);
                 send_message(partner_sockfd, msg);
             } else {
-                send_message(sockfd, "System: Nguoi nay khong yeu cau ghep doi voi ban. Bot ao tuong di ^^.");
+                send_message(sockfd, "System: Deo ai them yeu cau ghep doi voi ban dau. Cut ^^.");
             }
         } else if (strcmp(first_str, "\\decline") == 0) { // decline
             //debug
-            printf("request \\decline from %s-%d\n", clients[i].name, clients[i].sockfd);
+            printf("request \\decline from %s-%d\n", 
+                    clients[i].name, clients[i].sockfd);
             // TODO:
             last_str = strtok(NULL, "");
             int partner = atoi(last_str);
@@ -159,7 +170,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
                 clients[get_client_index(partner)].partner_sockfd = -1;
                 clients[get_client_index(partner)].status = -1;
             } else {
-                send_message(sockfd, "System: Nguoi nay khong yeu cau ghep doi voi ban. Bot ao tuong di.");
+                send_message(sockfd, "System: Deo ai them yeu cau ghep doi voi ban dau. Cut ^^.");
             }
 
         } else if (strcmp(first_str, "\\pp") == 0) { // pp
@@ -185,7 +196,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         }
 
         sprintf(msg, "%s: %s", clients[i].name, message);
-        send_message(clients[i].partner_sockfd, message);
+        send_message(clients[i].partner_sockfd, msg);
     }
     return;
 }
