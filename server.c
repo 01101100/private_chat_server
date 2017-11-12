@@ -1,56 +1,14 @@
 /**
  * Server side 
- * authors:
+ * authors: longtt and hienpd hedspi b k59 dhbkhn
  * created date:
  * last modified date:
  */
-#include <stdio.h> 
-#include <unistd.h> 
-#include <stdlib.h> 
-#include <string.h> 
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
-#include <netdb.h>
-
-#define MAX_CLIENTS 50
-#define MAX_NAME_LEN 30
-#define MSG_SIZE 1024
-#define SERV_PORT 9877
-#define HELP "\
-    Server supported command:\n\
-    --------------------------------------------------------------\n\
-    \\help : how to use command\n\
-    \\name <your name> : change your name\n\
-    \\connect <ID> : request to connect with partner has 'ID'\n\
-    \\accept <ID> : accept request of people has 'ID'\n\
-    \\decline <ID> : decline request of people has <ID>\n\
-    \\pp : left the current conversation.\n\
-    \\quit : exit program, offline.\n\
-    --------------------------------------------------------------\n"
-
-typedef struct {
-    int sockfd;
-    int partner_sockfd;
-    char name[MAX_NAME_LEN];
-    int status; //-1 if none-partner 0 if pendding, 1 if connected.
-}
-Client;
+#include "server.h"
 
 Client clients[MAX_CLIENTS];
 int maxi;
 fd_set allset;
-
-void send_message_all(char message[MSG_SIZE]);
-void send_message(int sockfd, char message[MSG_SIZE]);
-void process_client_activity(int sockfd, char message[MSG_SIZE]);
-void exit_client(int sockfd);
-void process_keyboard_activity(char * cmd, int serer_sockfd);
-void init();
-int add_client(int sockfd);
-void send_active_clients(int sockfd);
-int get_client_index(int sockfd);
-void pp(int index);
 
 void init() {
     int i;
@@ -64,8 +22,10 @@ void init() {
 }
 
 /**
-quit
-*/
+ * [process_keyboard_activity description]
+ * @param cmd           [description]
+ * @param server_sockfd [description]
+ */
 void process_keyboard_activity(char * cmd, int server_sockfd) {
     printf("%s\n", "process_keyboard_activity()\n");
     char msg[MSG_SIZE];
@@ -83,9 +43,9 @@ void process_keyboard_activity(char * cmd, int server_sockfd) {
 }
 
 /**
-close sockfd
-FD_CLR(socfd, &allset)
-*/
+ * [exit_client description]
+ * @param sockfd [description]
+ */
 void exit_client(int sockfd) {
     int i = get_client_index(sockfd);
     if (clients[i].status > 0) pp(i);
@@ -99,15 +59,10 @@ void exit_client(int sockfd) {
 }
 
 /**
-\help
-\getonline
-\name $name
-\connect $partner_sockfd
-\accept $partner_sockfd
-\decline $partner_sockfd
-\pp
-\quit
-*/
+ * [process_client_activity description]
+ * @param sockfd  [description]
+ * @param message [description]
+ */
 void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     char * first_str, * last_str;
     char msg[MSG_SIZE];
@@ -211,6 +166,11 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     return;
 }
 
+/**
+ * [send_message description]
+ * @param sockfd  [description]
+ * @param message [description]
+ */
 void send_message(int sockfd, char message[MSG_SIZE]) {
     write(sockfd, message, strlen(message));
 }
@@ -225,9 +185,10 @@ void send_message_all(char message[MSG_SIZE]) {
 }
 
 /**
-    add sockfd to allset
-    add sockfd, name to clients
-    */
+ * [add_client description]
+ * @param  sockfd [description]
+ * @return        [description]
+ */
 int add_client(int sockfd) {
     int i;
     for (i = 0; i < MAX_CLIENTS; i++) {
@@ -245,9 +206,10 @@ int add_client(int sockfd) {
 }
 
 /**
-get index of sockfd in clients list
-return -1 if sockfd is not exist on clients list
-*/
+ * [get_client_index description]
+ * @param  sockfd [description]
+ * @return        [description]
+ */
 int get_client_index(int sockfd) {
     int i;
     for (i = 0; i <= maxi; i++) {
@@ -257,8 +219,9 @@ int get_client_index(int sockfd) {
 }
 
 /**
-send online user list to user
-*/
+ * [send_active_clients description]
+ * @param sockfd [description]
+ */
 void send_active_clients(int sockfd) {
     int i;
     char msg[MSG_SIZE];
@@ -272,9 +235,9 @@ void send_active_clients(int sockfd) {
     }
 }
 
-/*
- * gui tin nhan ket thuc toi partner
- * xoa partner_sockfd o ca 2 Client struct
+/**
+ * [pp description]
+ * @param index [description]
  */
 void pp(int index) {
     int i = get_client_index(clients[index].partner_sockfd);
@@ -291,8 +254,9 @@ void pp(int index) {
 }
 
 /**
- * check user online
- * @return 0 if not-online, 1 if online
+ * [is_online description]
+ * @param  sockfd [description]
+ * @return        [description]
  */
 int is_online(int sockfd) {
     int i;
@@ -302,8 +266,10 @@ int is_online(int sockfd) {
 }
 
 /**
-
-*/
+ * [main description]
+ * @param argc [description]
+ * @param argv [description]
+ */
 void main(int argc, char * argv[]) {
     int client_sockfd, server_sockfd, sockfd;
     int i, n, nready, maxfd;

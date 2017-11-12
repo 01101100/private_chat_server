@@ -1,31 +1,28 @@
 /** 
 * Client side
-* authors:
+* authors: hienpd and longtt - hedspi b k59 dhbkhn
 * created date:
 * last modified date:
 */
-#include <stdio.h> 
-#include <unistd.h> 
-#include <stdlib.h> 
-#include <string.h> 
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
-#include <netdb.h>
-#include <arpa/inet.h>
+#include "client.h"
 
-#define SERV_PORT 9877
-#define MAX_NAME_LEN 30
-#define MSG_SIZE 1024
-
+/**
+ * [send_message description]
+ * @param sockfd  [description]
+ * @param message [description]
+ */
 void send_message(int sockfd, char message[MSG_SIZE]) {
     write(sockfd, message, strlen(message));
 }
 
+/**
+ * [print_usage description]
+ */
 void print_usage(){
-    printf("%s\n", "Run:\n ./client <server_address>");
+    printf("%s\n", USAGE);
     return;
 }
+
 void main(int argc, char *argv[]) {
 	int client_sockfd;
 	int fd, result_len;
