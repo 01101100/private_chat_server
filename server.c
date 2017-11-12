@@ -14,9 +14,20 @@
 #include <netdb.h>
 
 #define MAX_CLIENTS 50
-# define MAX_NAME_LEN 30
-# define MSG_SIZE 1024
-# define SERV_PORT 9877
+#define MAX_NAME_LEN 30
+#define MSG_SIZE 1024
+#define SERV_PORT 9877
+#define HELP "\
+    Server supported command:\n\
+    --------------------------------------------------------------\n\
+    \\help : how to use command\n\
+    \\name <your name> : change your name\n\
+    \\connect <ID> : request to connect with partner has 'ID'\n\
+    \\accept <ID> : accept request of people has 'ID'\n\
+    \\decline <ID> : decline request of people has <ID>\n\
+    \\pp : left the current conversation.\n\
+    \\quit : exit program, offline.\n\
+    --------------------------------------------------------------\n"
 
 typedef struct {
     int sockfd;
@@ -109,8 +120,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         // xu ly xau
         first_str = strtok(message, " ");
         if (strcmp(first_str, "\\help") == 0) {
-            sprintf(msg, "\n\n\\help : how to use command\n\\name : edit your name\n\\connect $partner_sockfd : request to connect with $partner_sockfd\n\\accept $partner_sockfd : accept request of $partner_sockfd\n\\decline $partner_sockfd : decline request of $partner_sockfd\n\\pp : left the conversation.\n\\quit : exit program, offline.\n");
-            send_message(sockfd, msg);
+            send_message(sockfd, HELP);
         } else if (strcmp(first_str, "\\getonline") == 0) {
             //debug:
             printf("request \\getonline from %s-%d\n", clients[i].name, clients[i].sockfd);
@@ -191,7 +201,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         neu da ghep doi gui msg toi partner
         */
         if (clients[i].partner_sockfd <= 0) {
-            send_message(sockfd, "System: You must connect with someone to start the conversation.");
+            send_message(sockfd, HELP);
             return;
         }
 

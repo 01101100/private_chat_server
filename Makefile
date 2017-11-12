@@ -1,5 +1,10 @@
-all: server
+PROGS =	server client
+
+all: ${PROGS}
+
 server: server.o
-	cc server.o -oserver
-server.o: server.c
-	cc -c server.c
+	${CC} ${CFLAGS} -o $@ server.o
+
+client: client.o
+	${CC} ${CFLAGS} -o $@ client.o
+
