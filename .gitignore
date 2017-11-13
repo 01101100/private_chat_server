@@ -1,5 +1,3 @@
-!.c
-!.h
-!Makefile
-!.gitignore
-!.md
+*.o
+client
+server
