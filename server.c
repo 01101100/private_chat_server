@@ -4,57 +4,7 @@
  * created date:
  * last modified date:
  */
-#include <stdio.h> 
-#include <unistd.h> 
-#include <stdlib.h> 
-#include <string.h> 
-#include <sys/types.h> 
-#include <sys/socket.h> 
-#include <netinet/in.h> 
-#include <netdb.h>
-
-#define MAX_CLIENTS 50
-#define MAX_NAME_LEN 30
-#define MSG_SIZE 1024
-#define SERV_PORT 9877
-#define MAX_PARTNERS 30
-#define INIT -1
-#define SPEND 0
-#define CONNECTED 1
-#define RPEND 2
-#define HELP "\
-    Server supported command:\n\
-    --------------------------------------------------------------\n\
-    \\help : how to use command\n\
-    \\name <your name> : change your name\n\
-    \\connect <ID> : request to connect with partner has 'ID'\n\
-    \\accept <ID> : accept request of people has 'ID'\n\
-    \\decline <ID> : decline request of people has <ID>\n\
-    \\pp : left the current conversation.\n\
-    \\quit : exit program, offline.\n\
-    --------------------------------------------------------------\n"
-
-typedef struct {
-    int sockfd;
-    int partner_sockfd;
-    int partners[MAX_PARTNERS];
-    int pair_status[MAX_PARTNERS];
-    int max_index;
-    int status; //-1 if none-partner 0 if pendding, 1 if connected.
-    char name[MAX_NAME_LEN];
-} Client;
-
-void send_message_all(char message[MSG_SIZE]);
-void send_message(int sockfd, char message[MSG_SIZE]);
-void process_client_activity(int sockfd, char message[MSG_SIZE]);
-void exit_client(int sockfd);
-void process_keyboard_activity(char * cmd, int serer_sockfd);
-void init();
-int add_client(int sockfd);
-void send_active_clients(int sockfd);
-int get_client_index(int sockfd);
-void pp(int index);
-int get_partner_index(int i, int partner_sockfd);
+#include "server.h"
 
 Client clients[MAX_CLIENTS];
 int maxi;
@@ -101,14 +51,13 @@ void process_keyboard_activity(char * cmd, int server_sockfd) {
  * @param sockfd [description]
  */
 void exit_client(int sockfd) {
-    int i = get_client_index(sockfd);
-    printf("max_index of %s-%d is %d\n",clients[i].name, clients[i].sockfd, clients[i].max_index);
-    for (int j = 0; j <= clients[i].max_index; j++){
+    printf("parsing exit_client(%d)\n", sockfd);
+    int i = get_client_index(sockfd), j;
+    for (j = 0; j <= clients[i].max_index; j++){
         if(clients[i].pair_status[j] == -1) continue;
         clients[i].partner_sockfd = clients[i].partners[j];
         clients[i].status = clients[i].pair_status[j];
         pp(i);
-        clients[i].partners[j] = clients[i].pair_status[j] = -1;
     }
     close(sockfd);
     FD_CLR(sockfd, & allset);
@@ -117,9 +66,15 @@ void exit_client(int sockfd) {
     clients[i].name[0] = '\0';
     clients[i].status = -1;
     clients[i].max_index = -1;
+    printf("exit exit_client(%d)\n", sockfd);
     return;
 }
-
+/**
+ * [add_partner description]
+ * @param  index          [description]
+ * @param  partner_sockfd [description]
+ * @return                [description]
+ */
 int add_partner(int index, int partner_sockfd){
     int si, ri;
     int partner_index = get_client_index(partner_sockfd);
@@ -207,6 +162,28 @@ void decline(int sockfd, int partner_sockfd){
   }
   return;
 }
+
+void print_struct(int sockfd){
+    int j;
+    int i = get_client_index(sockfd);
+    printf("struct{\n");
+    printf("\t%-30s%-10d\n", ".sockfd", clients[i].sockfd);
+    printf("\t%-30s%-10d\n", ".partner_sockfd", clients[i].partner_sockfd);
+    printf("\t%-30s%-10d\n", ".max_index", clients[i].max_index);
+    printf("\t%-30s%-10d\n", ".status", clients[i].status);
+    printf("\t%-30s%-30s\n", ".name", clients[i].name);
+    printf("\t%s", ".partners");
+    for(j = 0; j <= clients[i].max_index; j++){
+        printf("[%d]", clients[i].partners[j]);
+    }
+    printf("\n");
+    printf("\t%s", ".pair_status");
+    for(j = 0; j <= clients[i].max_index; j++){
+        printf("[%d]", clients[i].pair_status[j]);
+    }
+    printf("\n}\n");
+    return;
+}
 /**
  * [process_client_activity description]
  * @param sockfd  [description]
@@ -223,7 +200,9 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     if (message[0] == '\\') {
         // xu ly xau
         first_str = strtok(message, " ");
-        if (strcmp(first_str, "\\to") == 0) {
+        if (strcmp(first_str, "\\debug") == 0){
+            print_struct(sockfd);
+        }else if (strcmp(first_str, "\\to") == 0) {
             // TODO : change conversation to paired partner, cmd: \to <ID>
             last_str = strtok(NULL, "");
             int partner_sockfd = atoi(last_str);
@@ -299,12 +278,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         } else {
             send_message(sockfd, "System: Incorrect command!");
         }
-    } else {
-        /**
-        kiem tra da ghep doi hay chua,
-        neu chua ghep doi tra ve msg loi,
-        neu da ghep doi gui msg toi partner
-        */
+    } else { // message[0] 1= '\'
         if (clients[i].status < 0) {
             send_message(sockfd, HELP);
         } else if (clients[i].status == 0) {
@@ -313,7 +287,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             sprintf(msg, "%s: %s", clients[i].name, message);
             send_message(clients[i].partner_sockfd, msg);
         }
-    }
+    } // end if
     return;
 }
 
@@ -362,11 +336,16 @@ int add_client(int sockfd) {
  * @return        [description]
  */
 int get_client_index(int sockfd) {
-    int i;
+    int res = -1, i;
+    printf("get_client_index(%d)\n", sockfd);
     for (i = 0; i <= maxi; i++) {
-        if (clients[i].sockfd == sockfd) return i;
+        if (clients[i].sockfd == sockfd){
+            res = i;
+            break;
+        };
     }
-    return -1;
+    printf("get_client_index(%d) return %d\n", sockfd, res);
+    return res;
 }
 
 /**
@@ -388,8 +367,11 @@ void send_active_clients(int sockfd) {
 
 void remove_partner(int index, int partner_sockfd){
     int i = get_partner_index(index, partner_sockfd);
+    printf("parsing remove_partner(%d, %d)\n", index, partner_sockfd);
     clients[index].partners[i] = -1;
     clients[index].pair_status[i] = -1;
+    printf("exit remove_partner(%d, %d)\n", index, partner_sockfd);
+    return;
 }
 
 /**
@@ -397,12 +379,15 @@ void remove_partner(int index, int partner_sockfd){
  * @param index [description]
  */
 void pp(int index) {
+    char msg[MSG_SIZE];
+    int partner_index;
+    printf("Parsing pp(%d)\n", index);
+    print_struct(clients[index].sockfd);
     if(clients[index].status == INIT){
         send_message(clients[index].sockfd,"You are not in any conversation.");
         return;
     }
-    int partner_index = get_client_index(clients[index].partner_sockfd);
-    char msg[MSG_SIZE];
+    partner_index = get_client_index(clients[index].partner_sockfd);
     sprintf(msg, "System: You left the conversation with %s.\n", clients[partner_index].name);
     send_message(clients[index].sockfd, msg);
     sprintf(msg, "System: %s left the conversation.\n", clients[index].name);
@@ -411,6 +396,7 @@ void pp(int index) {
     remove_partner(partner_index, clients[index].sockfd);
     clients[index].partner_sockfd = -1;
     clients[index].status = -1;
+    printf("exit pp(%d)\n", index);
     return;
 }
 
@@ -445,7 +431,7 @@ void main(int argc, char * argv[]) {
     server_addr.sin_port = htons(SERV_PORT);
     bind(server_sockfd, (struct sockaddr * ) & server_addr, sizeof(server_addr));
     listen(server_sockfd, 1);
-
+    printf("Server is starting at port %d\n", SERV_PORT);
     /*initialize a file descriptor set */
     maxfd = server_sockfd;
     init();
