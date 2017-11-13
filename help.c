@@ -1,5 +1,5 @@
 #include "help.h"
-
+extern Client clients[MAX_CLIENTS];
 void print_struct(int sockfd){
 	int i = get_client_index(sockfd);
 	printf("%-10s%-10d\n", ".sockfd", clients[i].sockfd);
