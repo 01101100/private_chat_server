@@ -23,10 +23,40 @@ void print_usage(){
     return;
 }
 
+/**
+ * get username and password
+ * @param uname [description]
+ * @param pass  [description]
+ */
+void get_credential(char *username, char *password){
+    printf("\nEnter username and password (not include space):\n");
+    printf("username: ");
+    scanf("%s%*c", username);
+    printf("password: ");
+    scanf("%s%*c", password);
+    printf("u - %s|p - %s\n", username, password);
+    return;
+}
+
+int login(char *username, char *password, int sockfd){
+    printf("parsing login(%s, %s, %d)\n", username, password, sockfd);
+    char msg[MSG_SIZE];
+    int len;
+    sprintf(msg, "\\login %s %s", username, password);
+    send_message(sockfd, msg);
+    len = read(sockfd, msg, MSG_SIZE);
+    msg[len] = '\0';
+    printf("msg - %s|\n", msg);
+    printf("exit login()\n");
+    return atoi(msg);
+}
+
 void main(int argc, char *argv[]) {
 	int client_sockfd;
+    int choice;
 	int fd, result_len;
-	char buf[MSG_SIZE], msg[MSG_SIZE], name[MAX_NAME_LEN];
+	char buf[MSG_SIZE], msg[MSG_SIZE], 
+            username[MAX_NAME_LEN], password[MAX_NAME_LEN];
 	struct sockaddr_in server_addr;
 	fd_set testfds, clientfds;
     if (argc != 2) {
@@ -34,8 +64,24 @@ void main(int argc, char *argv[]) {
         exit(1);
     }
 
-	client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    printf("\n\n\
+===================================================\n\
+------------------- CHAT SERVICE ------------------\n\
+===================================================\n\n\
+1. LOGIN\n\
+2. REGISTER\n\
+3. EXIT\n");
+    while(1) {
+        scanf("%d%*c", &choice);
+        if(choice !=1 && choice != 2 && choice != 3) {
+            printf("Select 1, 2, or 3.\n");
+            continue;
+        } else if (choice == 3) exit(0);
+        else break; // if login or register
+    }
+    get_credential(username, password);
 
+	client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERV_PORT);
     inet_pton(AF_INET, argv[1], &server_addr.sin_addr);
@@ -44,8 +90,15 @@ void main(int argc, char *argv[]) {
     	printf("error connect socket!\n");
     	exit(1);
     }
-    printf("client_sockfd: %d\n", client_sockfd);
 
+    if (choice == 1) {
+        // TODO: LOGIN
+        while( !login(username, password, client_sockfd) ) get_credential(username, password);
+    } else if (choice == 2) {
+        // TODO: REGISTER
+        sprintf(msg, "\\register %s %s", username, password);
+        send_message(client_sockfd, msg);
+    }
     FD_ZERO(&clientfds);
     FD_SET(client_sockfd, &clientfds);
     FD_SET(0, &clientfds);

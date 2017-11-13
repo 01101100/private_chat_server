@@ -1,4 +1,5 @@
 #define MAX_CLIENTS 50
+#define MAX_USERS 50
 #define MAX_NAME_LEN 32
 #define MSG_SIZE 1024
 #define SERV_PORT 9877
@@ -21,3 +22,4 @@
     \\quit : exit program, offline.\n\
     --------------------------------------------------------------\n"
 #define USAGE "Run:\n ./client <server_address>"
+#define DATA_FILE "users.data"
