@@ -25,14 +25,37 @@ void print_usage(){
 
 void main(int argc, char *argv[]) {
 	int client_sockfd;
+    int choice;
 	int fd, result_len;
-	char buf[MSG_SIZE], msg[MSG_SIZE], name[MAX_NAME_LEN];
+	char buf[MSG_SIZE], msg[MSG_SIZE], 
+            name[MAX_NAME_LEN], password[MAX_NAME_LEN];
 	struct sockaddr_in server_addr;
 	fd_set testfds, clientfds;
     if (argc != 2) {
         print_usage();
         exit(1);
     }
+
+    printf("\n\n\
+===================================================\n\
+------------------- CHAT SERVICE ------------------\n\
+===================================================\n\n\
+1. LOGIN\n\
+2. REGISTER\n\
+3. EXIT\n");
+    while(1) {
+        scanf("%d%*c", &choice);
+        if(choice !=1 && choice != 2 && choice != 3) {
+            printf("Select 1, 2, or 3.\n");
+            continue;
+        } else if (choice == 3) exit(0);
+        else break; // if login or register
+    }
+    printf("Enter username and password (not include space):\n")
+    printf("\nusername: ");
+    scanf("%s%*c", name);
+    printf("\npassword: ");
+    scanf("%s%*c", password);
 
 	client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -44,11 +67,16 @@ void main(int argc, char *argv[]) {
     	printf("error connect socket!\n");
     	exit(1);
     }
-    printf("client_sockfd: %d\n", client_sockfd);
 
     FD_ZERO(&clientfds);
     FD_SET(client_sockfd, &clientfds);
     FD_SET(0, &clientfds);
+
+    if (choice == 1) {
+        // TODO: LOGIN
+    } else if (choice == 2) {
+        // TODO: REGISTER
+    }
 
     /* Now wait for messages from server */
     while (1) {
