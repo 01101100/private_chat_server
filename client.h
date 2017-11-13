@@ -7,8 +7,7 @@
 #include <netinet/in.h> 
 #include <netdb.h>
 #include <arpa/inet.h>
+#include "constant.h"
 
-#define SERV_PORT 9877
-#define MAX_NAME_LEN 30
-#define MSG_SIZE 1024
-#define USAGE "Run:\n ./client <server_address>"
+void send_message(int sockfd, char message[MSG_SIZE]);
+void print_usage();
