@@ -25,8 +25,10 @@ void print_usage(){
 
 void main(int argc, char *argv[]) {
 	int client_sockfd;
+    int choice;
 	int fd, result_len;
-	char buf[MSG_SIZE], msg[MSG_SIZE], name[MAX_NAME_LEN];
+	char buf[MSG_SIZE], msg[MSG_SIZE], 
+            name[MAX_NAME_LEN], password[MAX_NAME_LEN];
 	struct sockaddr_in server_addr;
 	fd_set testfds, clientfds;
     if (argc != 2) {
@@ -34,6 +36,34 @@ void main(int argc, char *argv[]) {
         exit(1);
     }
 
+    printf("\n\n\
+===================================================\n\
+------------------- CHAT SERVICE ------------------\n\
+===================================================\n\n\
+1. LOGIN\n\
+2. REGISTER\n\
+3. EXIT\n");
+    while(1) {
+        scanf("%d%*c", &choice);
+        if(choice !=1 && choice != 2 && choice != 3) {
+            printf("Select 1, 2, or 3.\n");
+            continue;
+        } else break;
+    }
+
+    switch (choice) {
+        case 1: {
+            // TODO : LOGIN
+
+        } break;
+
+        case 2: {
+            // TODO : REGISTER
+        } break;
+
+        default: exit(0);
+    }
+    
 	client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	server_addr.sin_family = AF_INET;
@@ -44,7 +74,6 @@ void main(int argc, char *argv[]) {
     	printf("error connect socket!\n");
     	exit(1);
     }
-    printf("client_sockfd: %d\n", client_sockfd);
 
     FD_ZERO(&clientfds);
     FD_SET(client_sockfd, &clientfds);
