@@ -11,6 +11,19 @@ User users[MAX_USERS];
 int maxi, num_users;
 fd_set allset;
 
+/**
+* get user index
+* @return -1 if not found
+*/
+int get_user_index(char *username) {
+    int i;
+    for (i = 0; i <= num_users; i++) {
+        if (strcmp(username, users[i].username) == 0) 
+            return i;
+    }
+    return -1;
+}
+
 void init() {
     int i, j;
     char username[MAX_NAME_LEN], password[MAX_NAME_LEN];
@@ -206,13 +219,21 @@ void print_struct(int sockfd){
     printf("\n}\n");
     return;
 }
+
+int login(char *username, char *password){
+	int i = get_user_index(username);
+	if (i == -1) return 0;
+	else if (strcmp(users[i].password, password) == 0) return 1;
+	else return 0;
+}
+
 /**
  * [process_client_activity description]
  * @param sockfd  [description]
  * @param message [description]
  */
 void process_client_activity(int sockfd, char message[MSG_SIZE]) {
-    char * first_str, * last_str;
+    char * first_str,  * middle_str, * last_str;
     char msg[MSG_SIZE];
     int i = get_client_index(sockfd);
     if(i == -1) {
@@ -222,14 +243,28 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     if (message[0] == '\\') {
         // xu ly xau
         first_str = strtok(message, " ");
-        if (strcmp(first_str, "\\with") == 0) {
+        if (strcmp(first_str, "\\login") == 0) {  // login
+            // TODO : LOGIN
+            middle_str = strtok(NULL, " ");
+            last_str = strtok(NULL, "");
+            if (login(middle_str, last_str)) {
+            	send_message(sockfd, "1");
+	            send_active_clients(sockfd);
+			} else send_message(sockfd, "0");
+        } else if (strcmp(first_str, "\\register") == 0) { // register
+            // TODO : REGISTER
+            middle_str = strtok(NULL, " ");
+            last_str = strtok(NULL, "");
+
+
+        } else if (strcmp(first_str, "\\with") == 0) {        // with
             int partner_sockfd = clients[i].partner_sockfd;
             int partner_index = get_client_index(partner_sockfd);
             sprintf(msg, "Connected with %s - %d", clients[partner_index].name, partner_sockfd);
             send_message(sockfd, msg);
-        } else if (strcmp(first_str, "\\debug") == 0){
+        } else if (strcmp(first_str, "\\debug") == 0){   // debug
             print_struct(sockfd);
-        }else if (strcmp(first_str, "\\to") == 0) {
+        }else if (strcmp(first_str, "\\to") == 0) {        // to
             // TODO : change conversation to paired partner, cmd: \to <ID>
             last_str = strtok(NULL, "");
             int partner_sockfd = atoi(last_str);
@@ -242,13 +277,13 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
                 sprintf(msg, "Now, send message to ID: %d", partner_sockfd);
                 send_message(sockfd, msg);
             }
-        } else if (strcmp(first_str, "\\help") == 0) {
+        } else if (strcmp(first_str, "\\help") == 0) {     // help
             send_message(sockfd, HELP);
-        } else if (strcmp(first_str, "\\getonline") == 0) {
+        } else if (strcmp(first_str, "\\getonline") == 0) {    // getonline
             printf("request \\getonline from %s-%d\n", clients[i].name, clients[i].sockfd);
             // get online user list 
             send_active_clients(sockfd);
-        } else if (strcmp(first_str, "\\name") == 0) {
+        } else if (strcmp(first_str, "\\name") == 0) {     // name
             //debug
             printf("request \\name from %s-%d\n", 
                     clients[i].name, clients[i].sockfd);
@@ -479,7 +514,6 @@ void main(int argc, char * argv[]) {
             if (i > maxi) maxi = i; /* */
             //debug
             printf("maxi = %d\n", maxi);
-            send_active_clients(client_sockfd);
             if (--nready <= 0) continue; /* no more readable descriptors */
         }
 
