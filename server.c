@@ -24,24 +24,6 @@ int get_user_index(char *username) {
     return -1;
 }
 
-/**
-* @return -1 if IS MAX_USERS
-* @return 0 if can't add, da ton tai username
-* @return 1 if added
-*/
-int add_user(char *username, char *password) {
-    int i = get_user_index(username);
-    if(i != -1) return 0; // da ton tai username
-    else {
-        if(num_users == MAX_USERS - 1) return -1;
-        else {
-            ++num_users;
-            strcpy(users[num_users].username, username);
-            strcpy(users[num_users].password, password);
-        }    
-    }
-    return 1;
-}
 
 void init() {
     int i, j;
@@ -247,6 +229,25 @@ int login(char *username, char *password){
 }
 
 /**
+* @return -1 if IS MAX_USERS
+* @return 0 if can't add, da ton tai username
+* @return 1 if added
+*/
+int sign_up(char *username, char *password) {
+    int i = get_user_index(username);
+    if(i != -1) return 0; // da ton tai username
+    else {
+        if(num_users == MAX_USERS - 1) return -1;
+        else {
+            ++num_users;
+            strcpy(users[num_users].username, username);
+            strcpy(users[num_users].password, password);
+        }    
+    }
+    return 1;
+}
+
+/**
  * [process_client_activity description]
  * @param sockfd  [description]
  * @param message [description]
@@ -270,11 +271,16 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             	send_message(sockfd, "1");
 	            send_active_clients(sockfd);
 			} else send_message(sockfd, "0");
-        } else if (strcmp(first_str, "\\register") == 0) { // register
-            // TODO : REGISTER
+        } else if (strcmp(first_str, "\\sign_up") == 0) { // sign_up
+            // TODO : sign_up
             middle_str = strtok(NULL, " ");
             last_str = strtok(NULL, "");
-
+            int check = sign_up(middle_str, last_str);
+            if(check == 1) {
+                send_message(sockfd, "1");
+                send_active_clients(sockfd);
+            } else
+                send_message(sockfd, "0");
 
         } else if (strcmp(first_str, "\\with") == 0) {        // with
             int partner_sockfd = clients[i].partner_sockfd;

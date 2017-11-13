@@ -29,7 +29,7 @@ void print_usage(){
  * @param pass  [description]
  */
 void get_credential(char *username, char *password){
-    printf("\nEnter username and password (not include space):\n");
+    // printf("\nEnter username and password (not include space):\n");
     printf("username: ");
     scanf("%s%*c", username);
     printf("password: ");
@@ -51,6 +51,18 @@ int login(char *username, char *password, int sockfd){
     return atoi(msg);
 }
 
+int sign_up(char *username, char *password, int sockfd) {
+    printf("parsing sign_up(%s, %s, %d)\n", username, password, sockfd);
+    int len;
+    char msg[MSG_SIZE];
+    sprintf(msg, "\\sign_up %s %s", username, password);
+    send_message(sockfd, msg);
+    len = read(sockfd, msg, MSG_SIZE);
+    msg[len] = '\0';
+    printf("msg - %s\n", msg);
+    return atoi(msg);
+}
+
 void main(int argc, char *argv[]) {
 	int client_sockfd;
     int choice;
@@ -69,7 +81,7 @@ void main(int argc, char *argv[]) {
 ------------------- CHAT SERVICE ------------------\n\
 ===================================================\n\n\
 1. LOGIN\n\
-2. REGISTER\n\
+2. SIGN UP\n\
 3. EXIT\n");
     while(1) {
         scanf("%d%*c", &choice);
@@ -77,7 +89,7 @@ void main(int argc, char *argv[]) {
             printf("Select 1, 2, or 3.\n");
             continue;
         } else if (choice == 3) exit(0);
-        else break; // if login or register
+        else break; // if login or sign_up
     }
     get_credential(username, password);
 
@@ -93,12 +105,15 @@ void main(int argc, char *argv[]) {
 
     if (choice == 1) {
         // TODO: LOGIN
-        while( !login(username, password, client_sockfd) ) get_credential(username, password);
+        while( !login(username, password, client_sockfd) ) 
+            get_credential(username, password);
     } else if (choice == 2) {
-        // TODO: REGISTER
-        sprintf(msg, "\\register %s %s", username, password);
-        send_message(client_sockfd, msg);
+        // TODO: sign_up
+        while( !sign_up(username, password, client_sockfd) ) {
+            get_credential(username, password);
+        }
     }
+
     FD_ZERO(&clientfds);
     FD_SET(client_sockfd, &clientfds);
     FD_SET(0, &clientfds);
