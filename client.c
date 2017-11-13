@@ -51,10 +51,10 @@ void main(int argc, char *argv[]) {
         } else if (choice == 3) exit(0);
         else break; // if login or register
     }
-    printf("Enter username and password (not include space):\n");
-    printf("\nusername: ");
+    printf("\nEnter username and password (not include space):\n");
+    printf("username: ");
     scanf("%s%*c", username);
-    printf("\npassword: ");
+    printf("password: ");
     scanf("%s%*c", password);
 
 	client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
