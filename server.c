@@ -200,7 +200,12 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     if (message[0] == '\\') {
         // xu ly xau
         first_str = strtok(message, " ");
-        if (strcmp(first_str, "\\debug") == 0){
+        if (strcmp(first_str, "\\with") == 0) {
+            int partner_sockfd = clients[i].partner_sockfd;
+            int partner_index = get_client_index(partner_sockfd);
+            sprintf(msg, "Connected with %s - %d", clients[partner_index].name, partner_sockfd);
+            send_message(sockfd, msg);
+        } else if (strcmp(first_str, "\\debug") == 0){
             print_struct(sockfd);
         }else if (strcmp(first_str, "\\to") == 0) {
             // TODO : change conversation to paired partner, cmd: \to <ID>
