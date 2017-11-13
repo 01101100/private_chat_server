@@ -24,6 +24,25 @@ int get_user_index(char *username) {
     return -1;
 }
 
+/**
+* @return -1 if IS MAX_USERS
+* @return 0 if can't add, da ton tai username
+* @return 1 if added
+*/
+int add_user(char *username, char *password) {
+    int i = get_user_index(username);
+    if(i != -1) return 0; // da ton tai username
+    else {
+        if(num_users == MAX_USERS - 1) return -1;
+        else {
+            ++num_users;
+            strcpy(users[num_users].username, username);
+            strcpy(users[num_users].password, password);
+        }    
+    }
+    return 1;
+}
+
 void init() {
     int i, j;
     char username[MAX_NAME_LEN], password[MAX_NAME_LEN];
