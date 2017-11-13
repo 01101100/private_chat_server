@@ -51,7 +51,7 @@ void main(int argc, char *argv[]) {
         } else if (choice == 3) exit(0);
         else break; // if login or register
     }
-    printf("Enter username and password (not include space):\n")
+    printf("Enter username and password (not include space):\n");
     printf("\nusername: ");
     scanf("%s%*c", name);
     printf("\npassword: ");
