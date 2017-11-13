@@ -134,7 +134,7 @@ int accept_connect(int sockfd, int partner_sockfd) {
     else if (clients[i].pair_status[index_in] == RPEND) {
         clients[i].pair_status[index_in] = CONNECTED;
         clients[i].status = CONNECTED;
-        clients[i].partner_sockf0d = partner_sockfd;
+        clients[i].partner_sockfd = partner_sockfd;
         int index_in_partner = get_partner_index(partner_index, sockfd);
         clients[partner_index].pair_status[index_in_partner] = CONNECTED;
         clients[partner_index].status = CONNECTED;
@@ -200,7 +200,12 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     if (message[0] == '\\') {
         // xu ly xau
         first_str = strtok(message, " ");
-        if (strcmp(first_str, "\\debug") == 0){
+        if (strcmp(first_str, "\\with") == 0) {
+            int partner_sockfd = clients[i].partner_sockfd;
+            int partner_index = get_client_index(partner_sockfd);
+            sprintf(msg, "Connected with %s - %d", clients[partner_index].name, partner_sockfd);
+            send_message(sockfd, msg);
+        } else if (strcmp(first_str, "\\debug") == 0){
             print_struct(sockfd);
         }else if (strcmp(first_str, "\\to") == 0) {
             // TODO : change conversation to paired partner, cmd: \to <ID>
