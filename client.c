@@ -59,10 +59,10 @@ void main(int argc, char *argv[]) {
     		//TODO:
     		scanf("%[^\n]%*c", msg);
     		send_message(client_sockfd, msg);
-    		if(strcmp(msg, "\\quit")==0) {
-    			close(client_sockfd);
-    			exit(1);
-    		}
+    		// if(strcmp(msg, "\\quit")==0) {
+    		// 	close(client_sockfd);
+    		// 	exit(1);
+    		// }
     	} else if(FD_ISSET(client_sockfd, &testfds)) { /* accept data from open socket */
     		// TODO:
     		result_len = read(client_sockfd, msg, MSG_SIZE);

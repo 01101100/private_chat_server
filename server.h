@@ -11,6 +11,11 @@
 #define MAX_NAME_LEN 30
 #define MSG_SIZE 1024
 #define SERV_PORT 9877
+#define MAX_PARTNERS 30
+#define INIT -1
+#define SPEND 0
+#define CONNECTED 1
+#define RPEND 2
 #define HELP "\
     Server supported command:\n\
     --------------------------------------------------------------\n\
@@ -26,8 +31,11 @@
 typedef struct {
     int sockfd;
     int partner_sockfd;
-    char name[MAX_NAME_LEN];
+    int partners[MAX_PARTNERS];
+    int pair_status[MAX_PARTNERS];
+    int max_index;
     int status; //-1 if none-partner 0 if pendding, 1 if connected.
+    char name[MAX_NAME_LEN];
 } Client;
 
 void send_message_all(char message[MSG_SIZE]);
@@ -40,3 +48,5 @@ int add_client(int sockfd);
 void send_active_clients(int sockfd);
 int get_client_index(int sockfd);
 void pp(int index);
+int get_partner_index(int i, int partner_sockfd);
+void print_struct(int sockfd);
