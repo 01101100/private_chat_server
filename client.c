@@ -23,6 +23,34 @@ void print_usage(){
     return;
 }
 
+/**
+ * get username and password
+ * @param uname [description]
+ * @param pass  [description]
+ */
+void get_credential(char *username, char *password){
+    printf("\nEnter username and password (not include space):\n");
+    printf("username: ");
+    scanf("%s%*c", username);
+    printf("password: ");
+    scanf("%s%*c", password);
+    printf("u - %s|p - %s\n", username, password);
+    return;
+}
+
+int login(char *username, char *password, int sockfd){
+    printf("parsing login(%s, %s, %d)\n", username, password, sockfd);
+    char msg[MSG_SIZE];
+    int len;
+    sprintf(msg, "\\login %s %s", username, password);
+    send_message(sockfd, msg);
+    len = read(sockfd, msg, MSG_SIZE);
+    msg[len] = '\0';
+    printf("msg - %s|\n", msg);
+    printf("exit login()\n");
+    return atoi(msg);
+}
+
 void main(int argc, char *argv[]) {
 	int client_sockfd;
     int choice;
@@ -51,14 +79,9 @@ void main(int argc, char *argv[]) {
         } else if (choice == 3) exit(0);
         else break; // if login or register
     }
-    printf("\nEnter username and password (not include space):\n");
-    printf("username: ");
-    scanf("%s%*c", username);
-    printf("password: ");
-    scanf("%s%*c", password);
+    get_credential(username, password);
 
 	client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-
 	server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(SERV_PORT);
     inet_pton(AF_INET, argv[1], &server_addr.sin_addr);
@@ -68,19 +91,17 @@ void main(int argc, char *argv[]) {
     	exit(1);
     }
 
-    FD_ZERO(&clientfds);
-    FD_SET(client_sockfd, &clientfds);
-    FD_SET(0, &clientfds);
-
     if (choice == 1) {
         // TODO: LOGIN
-        sprintf(msg, "\\login %s %s", username, password);
-        send_message(client_sockfd, msg);
+        while( !login(username, password, client_sockfd) ) get_credential(username, password);
     } else if (choice == 2) {
         // TODO: REGISTER
         sprintf(msg, "\\register %s %s", username, password);
         send_message(client_sockfd, msg);
     }
+    FD_ZERO(&clientfds);
+    FD_SET(client_sockfd, &clientfds);
+    FD_SET(0, &clientfds);
 
     /* Now wait for messages from server */
     while (1) {

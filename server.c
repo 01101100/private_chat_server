@@ -238,6 +238,14 @@ void print_struct(int sockfd){
     printf("\n}\n");
     return;
 }
+
+int login(char *username, char *password){
+	int i = get_user_index(username);
+	if (i == -1) return 0;
+	else if (strcmp(users[i].password, password) == 0) return 1;
+	else return 0;
+}
+
 /**
  * [process_client_activity description]
  * @param sockfd  [description]
@@ -256,7 +264,12 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         first_str = strtok(message, " ");
         if (strcmp(first_str, "\\login") == 0) {  // login
             // TODO : LOGIN
-
+            middle_str = strtok(NULL, " ");
+            last_str = strtok(NULL, "");
+            if (login(middle_str, last_str)) {
+            	send_message(sockfd, "1");
+	            send_active_clients(sockfd);
+			} else send_message(sockfd, "0");
         } else if (strcmp(first_str, "\\register") == 0) { // register
             // TODO : REGISTER
             middle_str = strtok(NULL, " ");
@@ -520,7 +533,6 @@ void main(int argc, char * argv[]) {
             if (i > maxi) maxi = i; /* */
             //debug
             printf("maxi = %d\n", maxi);
-            send_active_clients(client_sockfd);
             if (--nready <= 0) continue; /* no more readable descriptors */
         }
 
