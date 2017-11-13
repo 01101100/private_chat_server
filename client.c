@@ -28,7 +28,7 @@ void main(int argc, char *argv[]) {
     int choice;
 	int fd, result_len;
 	char buf[MSG_SIZE], msg[MSG_SIZE], 
-            name[MAX_NAME_LEN], password[MAX_NAME_LEN];
+            username[MAX_NAME_LEN], password[MAX_NAME_LEN];
 	struct sockaddr_in server_addr;
 	fd_set testfds, clientfds;
     if (argc != 2) {
@@ -53,7 +53,7 @@ void main(int argc, char *argv[]) {
     }
     printf("Enter username and password (not include space):\n");
     printf("\nusername: ");
-    scanf("%s%*c", name);
+    scanf("%s%*c", username);
     printf("\npassword: ");
     scanf("%s%*c", password);
 
