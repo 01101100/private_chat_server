@@ -7,12 +7,20 @@
 #include "server.h"
 
 Client clients[MAX_CLIENTS];
-int maxi;
+User users[MAX_USERS];
+int maxi, num_users;
 fd_set allset;
 
 void init() {
     int i, j;
+    char username[MAX_NAME_LEN], password[MAX_NAME_LEN];
+    FILE *fp = fopen(DATA_FILE, "r");
+    if (fp == NULL){
+    	printf("Database is not connected.\nRun \'touch users.data\' berfore run the ./server\n");
+    }
     maxi = -1;
+    num_users = -1;
+    printf("parsing init()\n");
     for (i = 0; i < MAX_CLIENTS; i++) {
         clients[i].sockfd = -1;
         clients[i].partner_sockfd = -1;
@@ -22,6 +30,14 @@ void init() {
             clients[i].partners[j] = clients[i].pair_status[j] = -1;
         }
     }
+    // Read database
+    while (fscanf(fp, "%s %s%*c", username, password) == 2){
+        printf("%s %s\n", username, password);
+        strcpy(users[++num_users].username, username);
+        strcpy(users[num_users].password, password);
+    }
+    fclose(fp);
+    printf("exit init()\n");
     return;
 }
 
@@ -31,6 +47,7 @@ void init() {
  * @param server_sockfd [description]
  */
 void process_keyboard_activity(char * cmd, int server_sockfd) {
+	FILE *fp = fopen(DATA_FILE, "w");
     printf("%s\n", "process_keyboard_activity()\n");
     char msg[MSG_SIZE];
     if (strcmp(cmd, "quit") == 0) {
@@ -42,6 +59,11 @@ void process_keyboard_activity(char * cmd, int server_sockfd) {
             }
         } // endfor
         close(server_sockfd);
+        for (int i = 0; i <= num_users; ++i)
+        {
+        	fprintf(fp, "%s %s\n", users[i].username, users[i].password);
+        }
+        fclose(fp);
         exit(0);
     } // endif
 }
