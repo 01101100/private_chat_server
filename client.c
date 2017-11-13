@@ -74,8 +74,12 @@ void main(int argc, char *argv[]) {
 
     if (choice == 1) {
         // TODO: LOGIN
+        sprintf(msg, "\\login %s %s", username, password);
+        send_message(client_sockfd, msg);
     } else if (choice == 2) {
         // TODO: REGISTER
+        sprintf(msg, "\\register %s %s", username, password);
+        send_message(client_sockfd, msg);
     }
 
     /* Now wait for messages from server */
