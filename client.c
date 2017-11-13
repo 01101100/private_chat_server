@@ -48,22 +48,15 @@ void main(int argc, char *argv[]) {
         if(choice !=1 && choice != 2 && choice != 3) {
             printf("Select 1, 2, or 3.\n");
             continue;
-        } else break;
+        } else if (choice == 3) exit(0);
+        else break; // if login or register
     }
+    printf("Enter username and password (not include space):\n")
+    printf("\nusername: ");
+    scanf("%s%*c", name);
+    printf("\npassword: ");
+    scanf("%s%*c", password);
 
-    switch (choice) {
-        case 1: {
-            // TODO : LOGIN
-
-        } break;
-
-        case 2: {
-            // TODO : REGISTER
-        } break;
-
-        default: exit(0);
-    }
-    
 	client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
 
 	server_addr.sin_family = AF_INET;
@@ -78,6 +71,12 @@ void main(int argc, char *argv[]) {
     FD_ZERO(&clientfds);
     FD_SET(client_sockfd, &clientfds);
     FD_SET(0, &clientfds);
+
+    if (choice == 1) {
+        // TODO: LOGIN
+    } else if (choice == 2) {
+        // TODO: REGISTER
+    }
 
     /* Now wait for messages from server */
     while (1) {
