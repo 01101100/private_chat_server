@@ -23,7 +23,7 @@
     --------------------------------------------------------------\n"
 #define USAGE "Run:\n ./client <server_address>"
 #define DATA_FILE "users.data"
-
+#define LINE "----------------------------------------------------------------"
 // Color
 #define NORMAL  "\x1B[0m"
 #define PINK  "\x1B[31m"

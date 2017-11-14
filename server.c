@@ -172,7 +172,6 @@ int accept_connect(int sockfd, int partner_sockfd) {
         clients[i].partner_sockfd = partner_sockfd;
         int index_in_partner = get_partner_index(partner_index, sockfd);
         clients[partner_index].pair_status[index_in_partner] = CONNECTED;
-        clients[partner_index].status = CONNECTED;
         return 1;
     }
 }
@@ -290,7 +289,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             int partner_sockfd = clients[i].partner_sockfd;
             int partner_index = get_client_index(partner_sockfd);
             sprintf(msg, "Connected with %s - %d", clients[partner_index].name, partner_sockfd);
-            send_message(sockfd, msg);
+            send_system_message(sockfd, msg);
         } else if (strcmp(first_str, "\\debug") == 0){   // debug
             print_struct(sockfd);
         }else if (strcmp(first_str, "\\to") == 0) {        // to
@@ -375,7 +374,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         } else if (clients[i].status == 0) {
             send_system_message(sockfd, "System: Please wait this partner accept the request.");
         } else {
-            sprintf(msg, "--------------------------------\n%s%s: %s%s\n--------------------------------", YELLOW, clients[i].name, message, NORMAL);
+            sprintf(msg, "%s\n%s%s: %s%s\n%s", LINE, YELLOW, clients[i].name, message, NORMAL, LINE);
             send_message(clients[i].partner_sockfd, msg);
         }
     } // end if
@@ -473,18 +472,19 @@ void pp(int index) {
     printf("Parsing pp(%d)\n", index);
     print_struct(clients[index].sockfd);
     if(clients[index].status == INIT){
-        send_message(clients[index].sockfd,"You are not in any conversation.");
+        send_system_message(clients[index].sockfd,"System: You are not in any conversation.");
         return;
     }
     partner_index = get_client_index(clients[index].partner_sockfd);
     sprintf(msg, "System: You left the conversation with %s.\n", clients[partner_index].name);
     send_system_message(clients[index].sockfd, msg);
-    sprintf(msg, "System: %s left the conversation.\n", clients[index].name);
+    sprintf(msg, "System: %s left the conversation with you.\n", clients[index].name);
     send_system_message(clients[index].partner_sockfd, msg);
     remove_partner(index, clients[index].partner_sockfd);
     remove_partner(partner_index, clients[index].sockfd);
     clients[index].partner_sockfd = -1;
     clients[index].status = -1;
+    clients[partner_index].partner_sockfd = clients[partner_index].status = INIT;
     printf("exit pp(%d)\n", index);
     return;
 }
