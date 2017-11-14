@@ -129,7 +129,7 @@ void main(int argc, char *argv[]) {
     FD_ZERO(&clientfds);
     FD_SET(client_sockfd, &clientfds);
     FD_SET(0, &clientfds);
-
+    printf("Type: %s\\help%s for more information.\n", GREEN, NORMAL);
     /* Now wait for messages from server */
     while (1) {
     	testfds = clientfds;
