@@ -155,7 +155,7 @@ void main(int argc, char *argv[]) {
             else if (result_len == 0) {
                 close(client_sockfd);
                 exit(1);
-            } else printf("%s\n", msg);
+            } else printf("%s%s%s\n",RED, msg, NORMAL);
     	}
     }
 }

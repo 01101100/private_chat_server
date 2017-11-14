@@ -297,11 +297,11 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             int partner_sockfd = atoi(last_str);
             int partner_index = get_partner_index(i, partner_sockfd);
             if(partner_index == -1) {
-                sprintf(msg, "Partner_sockfd: %d was not connected!", partner_sockfd);
+                sprintf(msg, "System: Partner_sockfd: %d was not connected!", partner_sockfd);
                 send_message(sockfd, msg);
             } else {
                 clients[i].partner_sockfd = partner_sockfd;
-                sprintf(msg, "Now, send message to ID: %d", partner_sockfd);
+                sprintf(msg, "System: Now, send message to ID: %d", partner_sockfd);
                 send_message(sockfd, msg);
             }
         } else if (strcmp(first_str, "\\help") == 0) {     // help
@@ -343,7 +343,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             if ((j = accept_connect(sockfd, partner_sockfd)) == -1){
                 send_message(sockfd, "System: Deo ai them yeu cau ghep doi voi ban dau. Cut ^^.");
             } else if (j == 0){
-                send_message(sockfd, "Already connected");
+                send_message(sockfd, "System: Already connected");
             } else {
                 sprintf(msg, "System: Ban da chap nhan loi moi cua %s-%d", 
                         clients[get_client_index(partner_sockfd)].name, partner_sockfd);
@@ -371,9 +371,9 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         if (clients[i].status < 0) {
             send_message(sockfd, HELP);
         } else if (clients[i].status == 0) {
-            send_message(sockfd, "Please wait this partner accept the request.");
+            send_message(sockfd, "System: Please wait this partner accept the request.");
         } else {
-            sprintf(msg, "%s: %s", clients[i].name, message);
+            sprintf(msg, "--------------------------------\n%s: %s\n--------------------------------", clients[i].name, message);
             send_message(clients[i].partner_sockfd, msg);
         }
     } // end if
@@ -426,14 +426,12 @@ int add_client(int sockfd) {
  */
 int get_client_index(int sockfd) {
     int res = -1, i;
-    printf("get_client_index(%d)\n", sockfd);
     for (i = 0; i <= maxi; i++) {
         if (clients[i].sockfd == sockfd){
             res = i;
             break;
         };
     }
-    printf("get_client_index(%d) return %d\n", sockfd, res);
     return res;
 }
 
@@ -448,7 +446,8 @@ void send_active_clients(int sockfd) {
     send_message(sockfd, msg);
     for (i = 0; i <= maxi; i++) {
         if (clients[i].sockfd > 0) {
-            sprintf(msg, "%-5d%-30s\n", clients[i].sockfd, clients[i].name);
+        	if (clients[i].sockfd == sockfd) sprintf(msg, "%-5d%s ( * )\n", clients[i].sockfd, clients[i].name);
+            else sprintf(msg, "%-5d%-30s\n", clients[i].sockfd, clients[i].name);
             send_message(sockfd, msg);
         }
     }
