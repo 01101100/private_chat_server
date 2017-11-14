@@ -369,7 +369,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         }
     } else { // message[0] 1= '\'
         if (clients[i].status < 0) {
-            send_message(sockfd, HELP);
+            send_system_message(sockfd, "System: You it not in any conversation.");
         } else if (clients[i].status == 0) {
             send_system_message(sockfd, "System: Please wait this partner accept the request.");
         } else {
