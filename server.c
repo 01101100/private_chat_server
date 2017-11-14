@@ -67,7 +67,7 @@ void process_keyboard_activity(char * cmd, int server_sockfd) {
         sprintf(msg, "System: Server is shutting down.");
         for (int i = 0; i <= maxi; i++) { // send all client
             if (clients[i].sockfd > 0) {
-                send_message(clients[i].sockfd, msg);
+                send_system_message(clients[i].sockfd, msg);
                 close(clients[i].sockfd);
             }
         } // endfor
@@ -182,18 +182,21 @@ xoa sockfd trong partners[], pair_status,
 */
 void decline(int sockfd, int partner_sockfd){
   int mi, pi, i, j;
+  char msg[MSG_SIZE];
   mi = get_client_index(sockfd);
   pi = get_client_index(partner_sockfd);
   if ((i = get_partner_index(mi, partner_sockfd)) < 0){
-    send_message(sockfd, "System: Deo ai them yeu cau ghep doi voi ban dau. Cut ^^.");
+    send_system_message(sockfd, "System: This person is not request to chat with you.");
   } else {
     j = get_partner_index(pi, sockfd);
     clients[mi].partners[i] = -1;
     clients[mi].pair_status[i] = -1;
     clients[pi].partners[j] = -1;
     clients[pi].pair_status[j] = -1;
-    send_message(partner_sockfd, "System: Ban da bi tu choi, den vl:)))");
-    send_message(sockfd, "Ban da tu choi loi moi thanh cong.");
+    sprintf(msg, "System: %s denied your request.", clients[mi].name);
+    send_system_message(partner_sockfd, msg);
+    sprintf(msg, "System: Denied %s's request.", clients[pi].name);
+    send_message(sockfd, msg);
   }
   return;
 }
@@ -228,6 +231,25 @@ int login(char *username, char *password){
 }
 
 /**
+* @return -1 if IS MAX_USERS
+* @return 0 if can't add, da ton tai username
+* @return 1 if added
+*/
+int sign_up(char *username, char *password) {
+    int i = get_user_index(username);
+    if(i != -1) return 0; // da ton tai username
+    else {
+        if(num_users == MAX_USERS - 1) return -1;
+        else {
+            ++num_users;
+            strcpy(users[num_users].username, username);
+            strcpy(users[num_users].password, password);
+        }    
+    }
+    return 1;
+}
+
+/**
  * [process_client_activity description]
  * @param sockfd  [description]
  * @param message [description]
@@ -249,13 +271,20 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             last_str = strtok(NULL, "");
             if (login(middle_str, last_str)) {
             	send_message(sockfd, "1");
+                strcpy(clients[i].name, middle_str); // rename to username login
 	            send_active_clients(sockfd);
 			} else send_message(sockfd, "0");
-        } else if (strcmp(first_str, "\\register") == 0) { // register
-            // TODO : REGISTER
+        } else if (strcmp(first_str, "\\sign_up") == 0) { // sign_up
+            // TODO : sign_up
             middle_str = strtok(NULL, " ");
             last_str = strtok(NULL, "");
-
+            int check = sign_up(middle_str, last_str);
+            if(check == 1) {
+                send_message(sockfd, "1");
+                strcpy(clients[i].name, middle_str); // rename to username sign_up
+                send_active_clients(sockfd);
+            } else
+                send_message(sockfd, "0");
 
         } else if (strcmp(first_str, "\\with") == 0) {        // with
             int partner_sockfd = clients[i].partner_sockfd;
@@ -270,12 +299,12 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             int partner_sockfd = atoi(last_str);
             int partner_index = get_partner_index(i, partner_sockfd);
             if(partner_index == -1) {
-                sprintf(msg, "Partner_sockfd: %d was not connected!", partner_sockfd);
-                send_message(sockfd, msg);
+                sprintf(msg, "System: Partner_sockfd: %d was not connected!", partner_sockfd);
+                send_system_message(sockfd, msg);
             } else {
                 clients[i].partner_sockfd = partner_sockfd;
-                sprintf(msg, "Now, send message to ID: %d", partner_sockfd);
-                send_message(sockfd, msg);
+                sprintf(msg, "System: Now, send message to ID: %d", partner_sockfd);
+                send_system_message(sockfd, msg);
             }
         } else if (strcmp(first_str, "\\help") == 0) {     // help
             send_message(sockfd, HELP);
@@ -300,11 +329,11 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             };
             sprintf(msg,
                     "System: Request chat from user: %s - %d\n\
-                    Type: \"\\accept %d\" to accept the request.\n\
-                    Type: \"\\decline %d\" to decline the reqest.", 
-                    clients[i].name, clients[i].sockfd, clients[i].sockfd, clients[i].sockfd);
-            send_message(sockfd, "System: Send request successfull!");
-            send_message(atoi(last_str), msg);
+                    Type: %s\\accept %d%s to accept the request.\n\
+                    Type: %s\\decline %d%s to deny the reqest.", 
+                    clients[i].name, clients[i].sockfd, GREEN, clients[i].sockfd, RED, GREEN, clients[i].sockfd, RED);
+            send_system_message(sockfd, "System: Request sent successfull!");
+            send_system_message(atoi(last_str), msg);
         } else if (strcmp(first_str, "\\accept") == 0) { // accept
             int j;
             last_str = strtok(NULL, "");
@@ -314,16 +343,16 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             printf("request \\accept from %s-%d\n", 
                     clients[i].name, clients[i].sockfd);
             if ((j = accept_connect(sockfd, partner_sockfd)) == -1){
-                send_message(sockfd, "System: Deo ai them yeu cau ghep doi voi ban dau. Cut ^^.");
+                send_system_message(sockfd, "System: this guy is not request to chat with you.");
             } else if (j == 0){
-                send_message(sockfd, "Already connected");
+                send_system_message(sockfd, "System: Already connected");
             } else {
                 sprintf(msg, "System: Ban da chap nhan loi moi cua %s-%d", 
                         clients[get_client_index(partner_sockfd)].name, partner_sockfd);
-                send_message(sockfd, msg);
+                send_system_message(sockfd, msg);
                 sprintf(msg, "System: %s-%d da chap nhan loi moi cua ban.", 
                         clients[i].name, sockfd);
-                send_message(partner_sockfd, msg);
+                send_system_message(partner_sockfd, msg);
             };
         } else if (strcmp(first_str, "\\decline") == 0) { // decline
             printf("request \\decline from %s-%d\n", clients[i].name, clients[i].sockfd);
@@ -338,15 +367,15 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             printf("request \\quit from %s-%d\n", clients[i].name, clients[i].sockfd);
             exit_client(sockfd);
         } else {
-            send_message(sockfd, "System: Incorrect command!");
+            send_system_message(sockfd, "System: Incorrect command!");
         }
     } else { // message[0] 1= '\'
         if (clients[i].status < 0) {
             send_message(sockfd, HELP);
         } else if (clients[i].status == 0) {
-            send_message(sockfd, "Please wait this partner accept the request.");
+            send_system_message(sockfd, "System: Please wait this partner accept the request.");
         } else {
-            sprintf(msg, "%s: %s", clients[i].name, message);
+            sprintf(msg, "--------------------------------\n%s%s: %s%s\n--------------------------------", YELLOW, clients[i].name, message, NORMAL);
             send_message(clients[i].partner_sockfd, msg);
         }
     } // end if
@@ -360,15 +389,14 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
  */
 void send_message(int sockfd, char message[MSG_SIZE]) {
     write(sockfd, message, strlen(message));
+    return;
 }
 
-void send_message_all(char message[MSG_SIZE]) {
-    int i;
-    for (i = 0; i <= maxi; i++) {
-        if (clients[i].sockfd > 0) {
-            send_message(clients[i].sockfd, message);
-        }
-    } // end for
+void send_system_message(int sockfd, char message[MSG_SIZE]) {
+	char msg[MSG_SIZE];
+	sprintf(msg, "%s%s", RED, message);
+    write(sockfd, msg, strlen(msg));
+    return;
 }
 
 /**
@@ -399,14 +427,12 @@ int add_client(int sockfd) {
  */
 int get_client_index(int sockfd) {
     int res = -1, i;
-    printf("get_client_index(%d)\n", sockfd);
     for (i = 0; i <= maxi; i++) {
         if (clients[i].sockfd == sockfd){
             res = i;
             break;
         };
     }
-    printf("get_client_index(%d) return %d\n", sockfd, res);
     return res;
 }
 
@@ -417,11 +443,12 @@ int get_client_index(int sockfd) {
 void send_active_clients(int sockfd) {
     int i;
     char msg[MSG_SIZE];
-    sprintf(msg, "%-5s%-30s\n", "ID", "Name");
+    sprintf(msg, "\n%sActive Users:\n%-5s%-30s\n",GREEN, "ID", "Name");
     send_message(sockfd, msg);
     for (i = 0; i <= maxi; i++) {
         if (clients[i].sockfd > 0) {
-            sprintf(msg, "%-5d%-30s\n", clients[i].sockfd, clients[i].name);
+        	if (clients[i].sockfd == sockfd) sprintf(msg, "%s%-5d%s ( * )\n",GREEN, clients[i].sockfd, clients[i].name);
+            else sprintf(msg, "%s%-5d%-30s\n",GREEN, clients[i].sockfd, clients[i].name);
             send_message(sockfd, msg);
         }
     }
@@ -451,9 +478,9 @@ void pp(int index) {
     }
     partner_index = get_client_index(clients[index].partner_sockfd);
     sprintf(msg, "System: You left the conversation with %s.\n", clients[partner_index].name);
-    send_message(clients[index].sockfd, msg);
+    send_system_message(clients[index].sockfd, msg);
     sprintf(msg, "System: %s left the conversation.\n", clients[index].name);
-    send_message(clients[index].partner_sockfd, msg);
+    send_system_message(clients[index].partner_sockfd, msg);
     remove_partner(index, clients[index].partner_sockfd);
     remove_partner(partner_index, clients[index].sockfd);
     clients[index].partner_sockfd = -1;
@@ -506,9 +533,9 @@ void main(int argc, char * argv[]) {
         /* new client connection */
         if (FD_ISSET(server_sockfd, & rset)) {
             client_sockfd = accept(server_sockfd, NULL, NULL);
-            printf("System: new connection from client_sockfd: %d\n\n", client_sockfd);
+            printf("System: new connection from client_sockfd: %d\n", client_sockfd);
             /* save descriptor */
-            i = add_client(client_sockfd);
+            i = add_client(client_sockfd);  // comment: should edit add_client()?
             
             if (client_sockfd > maxfd) maxfd = client_sockfd; /* */
             if (i > maxi) maxi = i; /* */

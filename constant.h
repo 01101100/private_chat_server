@@ -23,3 +23,12 @@
     --------------------------------------------------------------\n"
 #define USAGE "Run:\n ./client <server_address>"
 #define DATA_FILE "users.data"
+
+// Color
+#define NORMAL  "\x1B[0m"
+#define PINK  "\x1B[31m"
+#define GREEN  "\x1B[32m"
+#define YELLOW  "\x1B[33m"
+#define BLUE  "\x1B[34m"
+#define RED  "\x1B[35m"
+#define CYAN  "\x1B[36m"
