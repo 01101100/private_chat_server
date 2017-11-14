@@ -75,45 +75,49 @@ void main(int argc, char *argv[]) {
         print_usage();
         exit(1);
     }
+    // connect first
+    client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    server_addr.sin_family = AF_INET;
+    server_addr.sin_port = htons(SERV_PORT);
+    inet_pton(AF_INET, argv[1], &server_addr.sin_addr);
 
-    printf("\n\n\
+    if(connect(client_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+        printf("error connect socket!\n");
+        exit(1);
+    }
+    while(1) {
+        printf("\n\n\
 ===================================================\n\
 ------------------- CHAT SERVICE ------------------\n\
 ===================================================\n\n\
 1. LOGIN\n\
 2. SIGN UP\n\
 3. EXIT\n");
-    while(1) {
-        scanf("%d%*c", &choice);
-        if(choice !=1 && choice != 2 && choice != 3) {
-            printf("Select 1, 2, or 3.\n");
-            continue;
-        } else if (choice == 3) exit(0);
-        else break; // if login or sign_up
-    }
-    get_credential(username, password);
-
-	client_sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(SERV_PORT);
-    inet_pton(AF_INET, argv[1], &server_addr.sin_addr);
-
-    if(connect(client_sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-    	printf("error connect socket!\n");
-    	exit(1);
-    }
-
-    if (choice == 1) {
-        // TODO: LOGIN
-        while( !login(username, password, client_sockfd) ) 
-            get_credential(username, password);
-    } else if (choice == 2) {
-        // TODO: sign_up
-        while( !sign_up(username, password, client_sockfd) ) {
-            get_credential(username, password);
+        while(1) {
+            scanf("%d%*c", &choice);
+            if(choice !=1 && choice != 2 && choice != 3) {
+                printf("Select 1, 2, or 3.\n");
+                continue;
+            } else if(choice == 3) {
+                exit(0);
+            } else break;
+        } // end while
+        // if choice = 1 or 2
+        get_credential(username, password);
+        if (choice == 1) {
+            // TODO: LOGIN
+            while( !login(username, password, client_sockfd) ) 
+                get_credential(username, password);
+        } else if (choice == 2) {
+            // TODO: sign_up
+            if(sign_up(username, password, client_sockfd) == 1) {
+                break;
+            } else {   // sign_up false
+                printf("Sign_up false!\n");
+                continue;
+            }
         }
     }
-
     FD_ZERO(&clientfds);
     FD_SET(client_sockfd, &clientfds);
     FD_SET(0, &clientfds);

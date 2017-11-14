@@ -533,7 +533,7 @@ void main(int argc, char * argv[]) {
             client_sockfd = accept(server_sockfd, NULL, NULL);
             printf("System: new connection from client_sockfd: %d\n\n", client_sockfd);
             /* save descriptor */
-            i = add_client(client_sockfd);
+            i = add_client(client_sockfd);  // comment: should edit add_client()?
             
             if (client_sockfd > maxfd) maxfd = client_sockfd; /* */
             if (i > maxi) maxi = i; /* */
