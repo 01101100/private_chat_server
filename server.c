@@ -295,12 +295,13 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             // TODO : change conversation to paired partner, cmd: \to <ID>
             last_str = strtok(NULL, "");
             int partner_sockfd = atoi(last_str);
-            int partner_index = get_partner_index(i, partner_sockfd);
-            if(partner_index == -1) {
+            int index_in = get_partner_index(i, partner_sockfd);
+            if(index_in == -1) {
                 sprintf(msg, "System: Partner_sockfd: %d was not connected!", partner_sockfd);
                 send_system_message(sockfd, msg);
             } else {
                 clients[i].partner_sockfd = partner_sockfd;
+                clients[i].status = CONNECTED;
                 sprintf(msg, "System: Now, send message to ID: %d", partner_sockfd);
                 send_system_message(sockfd, msg);
             }
