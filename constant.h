@@ -1,4 +1,5 @@
 #define MAX_CLIENTS 50
+#define MAX_IDENT_LEN 32
 #define MAX_USERS 50
 #define MAX_NAME_LEN 32
 #define MSG_SIZE 1024
