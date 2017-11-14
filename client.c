@@ -19,7 +19,7 @@ void send_message(int sockfd, char message[MSG_SIZE]) {
  * [print_usage description]
  */
 void print_usage(){
-    printf("%s\n", USAGE);
+    printf("%s%s%s\n",RED, USAGE, NORMAL);
     return;
 }
 
@@ -34,32 +34,28 @@ void get_credential(char *username, char *password){
     scanf("%s%*c", username);
     printf("password: ");
     scanf("%s%*c", password);
-    printf("u - %s|p - %s\n", username, password);
     return;
 }
 
 int login(char *username, char *password, int sockfd){
-    printf("parsing login(%s, %s, %d)\n", username, password, sockfd);
+    printf("parsing login(%s, %s, %d)...\n", username, password, sockfd);
     char msg[MSG_SIZE];
     int len;
     sprintf(msg, "\\login %s %s", username, password);
     send_message(sockfd, msg);
     len = read(sockfd, msg, MSG_SIZE);
     msg[len] = '\0';
-    printf("msg - %s|\n", msg);
-    printf("exit login()\n");
     return atoi(msg);
 }
 
 int sign_up(char *username, char *password, int sockfd) {
-    printf("parsing sign_up(%s, %s, %d)\n", username, password, sockfd);
+    printf("parsing sign_up(%s, %s, %d)...\n", username, password, sockfd);
     int len;
     char msg[MSG_SIZE];
     sprintf(msg, "\\sign_up %s %s", username, password);
     send_message(sockfd, msg);
     len = read(sockfd, msg, MSG_SIZE);
     msg[len] = '\0';
-    printf("msg - %s\n", msg);
     return atoi(msg);
 }
 
@@ -155,7 +151,7 @@ void main(int argc, char *argv[]) {
             else if (result_len == 0) {
                 close(client_sockfd);
                 exit(1);
-            } else printf("%s%s%s\n",RED, msg, NORMAL);
+            } else printf("%s%s\n", msg, NORMAL);
     	}
     }
 }

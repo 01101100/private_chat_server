@@ -9,7 +9,7 @@
 #include "constant.h"
 #include "struct.h"
 
-void send_message_all(char message[MSG_SIZE]);
+void send_system_message(int sockfd, char message[MSG_SIZE]);
 void send_message(int sockfd, char message[MSG_SIZE]);
 void process_client_activity(int sockfd, char message[MSG_SIZE]);
 void exit_client(int sockfd);
