@@ -164,11 +164,12 @@ int accept_connect(int sockfd, int partner_sockfd) {
     int i = get_client_index(sockfd);
     int partner_index = get_client_index(partner_sockfd);
     int index_in = get_partner_index(i, partner_sockfd);
-    if (index_in == -1) return -1;
+    if (index_in == -1) return -1; // neu k co yeu cau
     else if(clients[i].pair_status[index_in] == CONNECTED) return 0; // already connected
-    else if (clients[i].pair_status[index_in] == RPEND) {
+    else if (clients[i].pair_status[index_in] == RPEND) { // neu chua connected 
         clients[i].pair_status[index_in] = CONNECTED;
         clients[i].partner_sockfd = partner_sockfd;
+        clients[i].status = CONNECTED; // SET LUON trang thai connected
         int index_in_partner = get_partner_index(partner_index, sockfd);
         clients[partner_index].pair_status[index_in_partner] = CONNECTED;
         return 1;
@@ -295,15 +296,38 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             // TODO : change conversation to paired partner, cmd: \to <ID>
             last_str = strtok(NULL, "");
             int partner_sockfd = atoi(last_str);
+            int partner_index = get_client_index(partner_sockfd);
             int index_in = get_partner_index(i, partner_sockfd);
-            if(index_in == -1) {
-                sprintf(msg, "System: Partner_sockfd: %d was not connected!", partner_sockfd);
-                send_system_message(sockfd, msg);
-            } else {
-                clients[i].partner_sockfd = partner_sockfd;
-                clients[i].status = CONNECTED;
-                sprintf(msg, "System: Now, send message to ID: %d", partner_sockfd);
-                send_system_message(sockfd, msg);
+            if(index_in == -1) { // chua ton tai partner
+                printf("Request \\to from %s-%d\n", 
+                        clients[i].name, clients[i].sockfd);
+                if(add_partner(i, atoi(last_str)) < 0){   // neu khon the add them
+                    send_system_message(sockfd, "Can't add connect any more!");
+                } else {  // neu co the request connect
+                    printf("Request \\connect from %s-%d\n", 
+                        clients[i].name, clients[i].sockfd);
+                    sprintf(msg,
+                    "System: Request chat from user: %s - %d\n\
+                    Type: %s\\accept %d%s to accept the request.\n\
+                    Type: %s\\decline %d%s to deny the reqest.", 
+                    clients[i].name, clients[i].sockfd, GREEN, clients[i].sockfd, RED, GREEN, clients[i].sockfd, RED);
+                    send_system_message(sockfd, "System: Request sent successfull!");
+                    send_system_message(atoi(last_str), msg);
+                }
+            } else { // da ton tai partner
+                if (clients[i].pair_status[index_in] == SPEND){  // neu dang yeu cau den partner
+                    sprintf(msg, "Waiting accept from %s", clients[partner_index].name);
+                    send_system_message(sockfd, msg);
+                }
+                else if(clients[i].pair_status[index_in] == RPEND) {  // duoc gui yeu cau nhung chua accept
+                    sprintf(msg, "You are not connected to %s-%d", clients[partner_index].name, partner_sockfd);
+                    send_system_message(sockfd, msg);
+                } else { // CONNECTED
+                    clients[i].partner_sockfd = partner_sockfd;
+                    clients[i].status = 1;
+                    sprintf(msg, "Now you can send message to %s-%d", clients[partner_index].name, partner_sockfd);
+                    send_system_message(sockfd, msg);
+                }
             }
         } else if (strcmp(first_str, "\\help") == 0) {     // help
             send_message(sockfd, HELP);
@@ -324,7 +348,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
                     clients[i].name, clients[i].sockfd);
             last_str = strtok(NULL, "");
             if(add_partner(i, atoi(last_str)) < 0){
-                return;
+                send_system_message(sockfd, "Can't add connect any more!");
             };
             sprintf(msg,
                     "System: Request chat from user: %s - %d\n\
@@ -341,18 +365,19 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             //debug
             printf("request \\accept from %s-%d\n", 
                     clients[i].name, clients[i].sockfd);
-            if ((j = accept_connect(sockfd, partner_sockfd)) == -1){
+            if ((j = accept_connect(sockfd, partner_sockfd)) == -1){ // neu k co yeu cau
                 send_system_message(sockfd, "System: this guy is not request to chat with you.");
-            } else if (j == 0){
+            } else if (j == 0){  // neu da ket noi
                 send_system_message(sockfd, "System: Already connected");
-            } else {
+            } else {  // neu chua ket noi
+
                 sprintf(msg, "System: Ban da chap nhan loi moi cua %s-%d", 
                         clients[get_client_index(partner_sockfd)].name, partner_sockfd);
                 send_system_message(sockfd, msg);
                 sprintf(msg, "System: %s-%d da chap nhan loi moi cua ban.", 
                         clients[i].name, sockfd);
                 send_system_message(partner_sockfd, msg);
-            };
+            }
         } else if (strcmp(first_str, "\\decline") == 0) { // decline
             printf("request \\decline from %s-%d\n", clients[i].name, clients[i].sockfd);
             last_str = strtok(NULL, "");
