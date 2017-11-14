@@ -269,6 +269,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             last_str = strtok(NULL, "");
             if (login(middle_str, last_str)) {
             	send_message(sockfd, "1");
+                strcpy(clients[i].name, middle_str); // rename to username login
 	            send_active_clients(sockfd);
 			} else send_message(sockfd, "0");
         } else if (strcmp(first_str, "\\sign_up") == 0) { // sign_up
@@ -278,6 +279,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             int check = sign_up(middle_str, last_str);
             if(check == 1) {
                 send_message(sockfd, "1");
+                strcpy(clients[i].name, middle_str); // rename to username sign_up
                 send_active_clients(sockfd);
             } else
                 send_message(sockfd, "0");
@@ -442,7 +444,7 @@ int get_client_index(int sockfd) {
 void send_active_clients(int sockfd) {
     int i;
     char msg[MSG_SIZE];
-    sprintf(msg, "%-5s%-30s\n", "ID", "Name");
+    sprintf(msg, "\nActive Users:\n%-5s%-30s\n", "ID", "Name");
     send_message(sockfd, msg);
     for (i = 0; i <= maxi; i++) {
         if (clients[i].sockfd > 0) {

@@ -65,6 +65,7 @@ int sign_up(char *username, char *password, int sockfd) {
 
 void main(int argc, char *argv[]) {
 	int client_sockfd;
+    char choice_str[MAX_NAME_LEN];
     int choice;
 	int fd, result_len;
 	char buf[MSG_SIZE], msg[MSG_SIZE], 
@@ -86,7 +87,7 @@ void main(int argc, char *argv[]) {
         exit(1);
     }
     while(1) {
-        printf("\n\n\
+        printf("\n\
 ===================================================\n\
 ------------------- CHAT SERVICE ------------------\n\
 ===================================================\n\n\
@@ -94,9 +95,13 @@ void main(int argc, char *argv[]) {
 2. SIGN UP\n\
 3. EXIT\n");
         while(1) {
-            scanf("%d%*c", &choice);
+            printf("\nEnter your choice:...");
+            scanf("%[^\n]%*c", choice_str);
+            if(strlen(choice_str) != 1) continue;
+            else choice = atoi(choice_str);
+            
             if(choice !=1 && choice != 2 && choice != 3) {
-                printf("Select 1, 2, or 3.\n");
+                printf("\nSelect 1, 2, or 3.");
                 continue;
             } else if(choice == 3) {
                 exit(0);
@@ -104,16 +109,23 @@ void main(int argc, char *argv[]) {
         } // end while
         // if choice = 1 or 2
         get_credential(username, password);
+
         if (choice == 1) {
             // TODO: LOGIN
-            while( !login(username, password, client_sockfd) ) 
-                get_credential(username, password);
+            if(login(username, password, client_sockfd)) {
+                printf("\nLogin successfully!\n");
+                break;
+            } else {
+                printf("\nLogin false!");
+                continue;
+            }
         } else if (choice == 2) {
             // TODO: sign_up
             if(sign_up(username, password, client_sockfd) == 1) {
+                printf("\nSign_up successfully!\n");
                 break;
             } else {   // sign_up false
-                printf("Sign_up false!\n");
+                printf("\nSign_up false!");
                 continue;
             }
         }
