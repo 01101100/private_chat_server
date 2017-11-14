@@ -133,7 +133,7 @@ int add_partner(int index, int partner_sockfd){
         send_message(clients[index].sockfd, msg);
         return -1;
     }
-    printf("add_partner(%d, %d)", index, partner_sockfd); // log
+    printf("add_partner(%d, %d)\n", index, partner_sockfd); // log
     clients[index].partners[si] = partner_sockfd;
     clients[index].pair_status[si] = SPEND;
     clients[partner_index].partners[ri] = clients[index].sockfd;
@@ -168,10 +168,9 @@ int accept_connect(int sockfd, int partner_sockfd) {
     else if(clients[i].pair_status[index_in] == CONNECTED) return 0; // already connected
     else if (clients[i].pair_status[index_in] == RPEND) { // neu chua connected 
         clients[i].pair_status[index_in] = CONNECTED;
-        clients[i].partner_sockfd = partner_sockfd;
-        clients[i].status = CONNECTED; // SET LUON trang thai connected
         int index_in_partner = get_partner_index(partner_index, sockfd);
         clients[partner_index].pair_status[index_in_partner] = CONNECTED;
+        if (clients[partner_index].partner_sockfd == sockfd) clients[partner_index].status = CONNECTED;
         return 1;
     }
 }
@@ -355,29 +354,22 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         	}
             partner_index = get_client_index(partner_sockfd);
             index_in = get_partner_index(i, partner_sockfd);
+            /* change state of sender */
+            clients[i].partner_sockfd = partner_sockfd;
             if(index_in == -1) { // chua ton tai partner
-                if(add_partner(i, partner_sockfd) < 0){   // neu khon the add them
-                    send_system_message(sockfd, "Can't add connect any more!");
-                } else {  // neu co the request connect
-                    sprintf(msg,
-                    "System: Request chat from user: %s - %d\n\
-                    Type: %s\\accept %d%s to accept the request.\n\
-                    Type: %s\\decline %d%s to deny the reqest.", 
-                    clients[i].name, clients[i].sockfd, GREEN, clients[i].sockfd, RED, GREEN, clients[i].sockfd, RED);
-                    send_system_message(sockfd, "System: Request sent successfull!");
-                    send_system_message(partner_sockfd, msg);
-                }
+                handle_connect_cmd(sockfd, partner_sockfd);
+                clients[i].status = SPEND;
             } else { // da ton tai partner
                 if (clients[i].pair_status[index_in] == SPEND){  // neu dang yeu cau den partner
                     sprintf(msg, "System: Waiting accept from %s", clients[partner_index].name);
                     send_system_message(sockfd, msg);
+                    clients[i].status = SPEND;
                 }
                 else if(clients[i].pair_status[index_in] == RPEND) {  // duoc gui yeu cau nhung chua accept
-                    sprintf(msg, "System: You are not connected to %s-%d", clients[partner_index].name, partner_sockfd);
-                    send_system_message(sockfd, msg);
+                	handle_accept_cmd(sockfd, partner_sockfd);
+                	clients[i].status = CONNECTED;
                 } else { // CONNECTED
-                    clients[i].partner_sockfd = partner_sockfd;
-                    clients[i].status = 1;
+                    clients[i].status = CONNECTED;
                     sprintf(msg, "System: Now you can send message to %s-%d", clients[partner_index].name, partner_sockfd);
                     send_system_message(sockfd, msg);
                 }
