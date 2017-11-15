@@ -11,6 +11,16 @@ User users[MAX_USERS];
 int maxi, num_users;
 fd_set allset;
 
+
+int get_sockfd_from_name(char *name) {
+    int i;
+    for(i=0; i <= maxi; i++) {
+        if(strcmp(name, clients[i].name) == 0)
+            return clients[i].sockfd;  // return sockfd from name
+    }
+    return NOT_ACTIVE; // if not active
+}
+
 /**
 * get user index
 * @return -1 if not found
@@ -268,9 +278,9 @@ int handle_connect_cmd(int sockfd, int partner_sockfd){
 	};
 	sprintf(msg,
 	        "System: Request chat from user: %s - %d\n\
-	        Type: %s\\accept %d%s to accept the request.\n\
-	        Type: %s\\decline %d%s to deny the reqest.", 
-	        clients[i].name, clients[i].sockfd, GREEN, clients[i].sockfd, RED, GREEN, clients[i].sockfd, RED);
+	        Type: %s\\accept %s%s to accept the request.\n\
+	        Type: %s\\decline %s%s to deny the reqest.", 
+	        clients[i].name, clients[i].sockfd, GREEN, clients[i].name, RED, GREEN, clients[i].name, RED);
 	send_system_message(sockfd, "System: Request sent successfull!");
 	send_system_message(partner_sockfd, msg);
 	return 1;
@@ -347,7 +357,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
             print_struct(sockfd);
         }else if (strcmp(first_str, "\\to") == 0) {        // to
         	int partner_index, partner_sockfd, index_in;
-            partner_sockfd = atoi(middle_str);
+            partner_sockfd = get_sockfd_from_name(middle_str);
         	if (params != 2 || partner_sockfd == 0){
         		send_system_message(sockfd, "System: Invalid \\to command\nType \\help for more information.");
         		return;
@@ -387,7 +397,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         	}
             send_active_clients(sockfd);
         } else if (strcmp(first_str, "\\connect") == 0) { // connect
-        	int partner_sockfd = atoi(middle_str);
+        	int partner_sockfd = get_sockfd_from_name(middle_str);
         	if (params != 2 || partner_sockfd == 0){
         		send_system_message(sockfd, "Invalid \\connect <> command\nType \\help for details.");
         		return;
@@ -395,14 +405,14 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         	handle_connect_cmd(sockfd, partner_sockfd);
         } else if (strcmp(first_str, "\\accept") == 0) { // accept
             int j;
-            int partner_sockfd = atoi(middle_str);
+            int partner_sockfd = get_sockfd_from_name(middle_str);
         	if (params != 2 || partner_sockfd == 0){
         		send_system_message(sockfd, "Invalid \\connect <> command\nType \\help for details.");
         		return;
         	}
         	handle_accept_cmd(sockfd, partner_sockfd);
         } else if (strcmp(first_str, "\\decline") == 0) { // decline
-            int partner_sockfd = atoi(middle_str);
+            int partner_sockfd = get_sockfd_from_name(middle_str);
         	if (params != 2 || partner_sockfd == 0){
         		send_system_message(sockfd, "Invalid \\decline <> command\nType \\help for details.");
         		return;
