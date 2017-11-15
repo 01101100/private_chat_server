@@ -60,7 +60,7 @@ int sign_up(char *username, char *password, int sockfd) {
 }
 
 void main(int argc, char *argv[]) {
-	int client_sockfd;
+	int client_sockfd, state;
     char choice_str[MAX_NAME_LEN];
     int choice;
 	int fd, result_len;
@@ -108,11 +108,14 @@ void main(int argc, char *argv[]) {
 
         if (choice == 1) {
             // TODO: LOGIN
-            if(login(username, password, client_sockfd)) {
+            if((state = login(username, password, client_sockfd)) == 1) { // login success
                 printf("\nLogin successfully!\n");
                 break;
+            } else if(state == 2){
+                printf("\nThis account is currently logged in another computer.\n");
+                return;
             } else {
-                printf("\nLogin false!");
+                printf("\nWrong username or password.");
                 continue;
             }
         } else if (choice == 2) {

@@ -239,9 +239,12 @@ void print_struct(int sockfd){
  */
 int login(char *username, char *password){
 	int i = get_user_index(username);
-	if (i == -1) return 0;
-	else if (strcmp(users[i].password, password) == 0) return 1;
-	else return 0;
+	if (i == -1) return 0; // sai username
+	else if (strcmp(users[i].password, password) == 0){ // dung username, password
+		i = get_sockfd_from_name(username);
+		if (i == NOT_ACTIVE) return 1; // login success
+		return 2; // da dang nhap tren may khac
+	} else return 0; // sai mat khau
 }
 
 /**
@@ -329,10 +332,14 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
     	params = sscanf(message, "%s%s%s", first_str, middle_str, last_str);
     	printf("cmd: %-10s%-15s%-15sparams: %-2dsockfd: %-4d\n", first_str, middle_str, last_str, params, sockfd); // log
         if (strcmp(first_str, "\\login") == 0) {  // login
-            if (login(middle_str, last_str)) { // login success
+        	int state;
+            if ((state = login(middle_str, last_str)) == 1) { // login success
             	send_message(sockfd, "1");
                 strcpy(clients[i].name, middle_str); // rename to username login
+                sleep(1);
 	            send_active_clients(sockfd);
+			} else if(state == 2){ // dang nhap tren may khac
+				send_message(sockfd, "2");
 			} else send_message(sockfd, "0"); // login failed
         } else if (strcmp(first_str, "\\sign_up") == 0) { // sign_up
             int check = sign_up(middle_str, last_str);
