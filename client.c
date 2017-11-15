@@ -91,7 +91,7 @@ void main(int argc, char *argv[]) {
 2. SIGN UP\n\
 3. EXIT\n");
         while(1) {
-            printf("\nEnter your choice:...");
+            printf("\nEnter your choice:... ");
             scanf("%[^\n]%*c", choice_str);
             if(strlen(choice_str) != 1) continue;
             else choice = atoi(choice_str);
