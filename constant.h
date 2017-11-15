@@ -15,11 +15,11 @@
     --------------------------------------------------------------\n\
     \\help : how to use command\n\
     \\with : show current partner\n\
-    \\name <your name> : change your name\n\
-    \\connect <name> : request to connect with partner has 'name'\n\
-    \\accept <name> : accept request of people has 'name'\n\
-    \\to <name> : send_message to <name>\n\
-    \\decline <name> : decline request of people has <name>\n\
+    \\name <username> : change your <username>\n\
+    \\connect <username> : request to connect with partner has <username>\n\
+    \\accept <username> : accept request of people has <username>\n\
+    \\to <username> : send_message to <username>\n\
+    \\decline <username> : decline request of people has <username>\n\
     \\pp : left the current conversation.\n\
     \\quit : exit program, offline.\n\
     --------------------------------------------------------------\n"

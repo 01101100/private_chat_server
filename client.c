@@ -113,7 +113,7 @@ void main(int argc, char *argv[]) {
                 break;
             } else if(state == 2){
                 printf("\nThis account is currently logged in another computer.\n");
-                return;
+                continue;
             } else {
                 printf("\nWrong username or password.");
                 continue;
