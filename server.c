@@ -361,27 +361,31 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         	if (params != 2 || partner_sockfd == 0){
         		send_system_message(sockfd, "System: Invalid \\to command\nType \\help for more information.");
         		return;
-        	}
-            partner_index = get_client_index(partner_sockfd);
-            index_in = get_partner_index(i, partner_sockfd);
-            /* change state of sender */
-            clients[i].partner_sockfd = partner_sockfd;
-            if(index_in == -1) { // chua ton tai partner
-                handle_connect_cmd(sockfd, partner_sockfd);
-                clients[i].status = SPEND;
-            } else { // da ton tai partner
-                if (clients[i].pair_status[index_in] == SPEND){  // neu dang yeu cau den partner
-                    sprintf(msg, "System: Waiting accept from %s", clients[partner_index].name);
-                    send_system_message(sockfd, msg);
+        	} else if (partner_sockfd == NOT_ACTIVE) {
+                sprintf(msg, "User %s is not active now. Type \\getonline to show active users.", middle_str);
+                send_system_message(sockfd, msg);
+            } else{
+                partner_index = get_client_index(partner_sockfd);
+                index_in = get_partner_index(i, partner_sockfd);
+                /* change state of sender */
+                clients[i].partner_sockfd = partner_sockfd;
+                if(index_in == -1) { // chua ton tai partner
+                    handle_connect_cmd(sockfd, partner_sockfd);
                     clients[i].status = SPEND;
-                }
-                else if(clients[i].pair_status[index_in] == RPEND) {  // duoc gui yeu cau nhung chua accept
-                	handle_accept_cmd(sockfd, partner_sockfd);
-                	clients[i].status = CONNECTED;
-                } else { // CONNECTED
-                    clients[i].status = CONNECTED;
-                    sprintf(msg, "System: Now you can send message to %s-%d", clients[partner_index].name, partner_sockfd);
-                    send_system_message(sockfd, msg);
+                } else { // da ton tai partner
+                    if (clients[i].pair_status[index_in] == SPEND){  // neu dang yeu cau den partner
+                        sprintf(msg, "System: Waiting accept from %s", clients[partner_index].name);
+                        send_system_message(sockfd, msg);
+                        clients[i].status = SPEND;
+                    }
+                    else if(clients[i].pair_status[index_in] == RPEND) {  // duoc gui yeu cau nhung chua accept
+                    	handle_accept_cmd(sockfd, partner_sockfd);
+                    	clients[i].status = CONNECTED;
+                    } else { // CONNECTED
+                        clients[i].status = CONNECTED;
+                        sprintf(msg, "System: Now you can send message to %s-%d", clients[partner_index].name, partner_sockfd);
+                        send_system_message(sockfd, msg);
+                    }
                 }
             }
         } else if (strcmp(first_str, "\\help") == 0) {     // help
@@ -401,23 +405,32 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
         	if (params != 2 || partner_sockfd == 0){
         		send_system_message(sockfd, "Invalid \\connect <> command\nType \\help for details.");
         		return;
-        	}
-        	handle_connect_cmd(sockfd, partner_sockfd);
+        	} else if (partner_sockfd == NOT_ACTIVE) {
+                sprintf(msg, "User %s is not active now. Type \\getonline to show active users.", middle_str);
+                send_system_message(sockfd, msg);
+            } else
+        	   handle_connect_cmd(sockfd, partner_sockfd);
         } else if (strcmp(first_str, "\\accept") == 0) { // accept
             int j;
             int partner_sockfd = get_sockfd_from_name(middle_str);
         	if (params != 2 || partner_sockfd == 0){
         		send_system_message(sockfd, "Invalid \\connect <> command\nType \\help for details.");
         		return;
-        	}
-        	handle_accept_cmd(sockfd, partner_sockfd);
+        	} else if (partner_sockfd == NOT_ACTIVE) {
+                sprintf(msg, "User %s is not active now. Type \\getonline to show active users.", middle_str);
+                send_system_message(sockfd, msg);
+            } else 
+        	   handle_accept_cmd(sockfd, partner_sockfd);
         } else if (strcmp(first_str, "\\decline") == 0) { // decline
             int partner_sockfd = get_sockfd_from_name(middle_str);
         	if (params != 2 || partner_sockfd == 0){
         		send_system_message(sockfd, "Invalid \\decline <> command\nType \\help for details.");
         		return;
-        	}
-            decline(sockfd,partner_sockfd);
+        	} else if (partner_sockfd == NOT_ACTIVE) {
+                sprintf(msg, "User %s is not active now. Type \\getonline to show active users.", middle_str);
+                send_system_message(sockfd, msg);
+            } else
+                decline(sockfd,partner_sockfd);
         } else if (strcmp(first_str, "\\pp") == 0) { // pp
         	if (params != 1){
         		send_system_message(sockfd, "System: Just \\pp");
