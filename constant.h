@@ -6,6 +6,7 @@
 #define SERV_PORT 9877
 #define MAX_PARTNERS 30
 #define INIT -1
+#define NOT_ACTIVE -99999
 #define SPEND 0
 #define CONNECTED 1
 #define RPEND 2
@@ -15,10 +16,10 @@
     \\help : how to use command\n\
     \\with : show current partner\n\
     \\name <your name> : change your name\n\
-    \\connect <ID> : request to connect with partner has 'ID'\n\
-    \\accept <ID> : accept request of people has 'ID'\n\
-    \\to <ID> : send_message to <ID>\n\
-    \\decline <ID> : decline request of people has <ID>\n\
+    \\connect <name> : request to connect with partner has 'name'\n\
+    \\accept <name> : accept request of people has 'name'\n\
+    \\to <name> : send_message to <name>\n\
+    \\decline <name> : decline request of people has <name>\n\
     \\pp : left the current conversation.\n\
     \\quit : exit program, offline.\n\
     --------------------------------------------------------------\n"
