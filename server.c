@@ -338,6 +338,13 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
                 strcpy(clients[i].name, middle_str); // rename to username login
                 sleep(1);
 	            send_active_clients(sockfd);
+                sprintf(msg,
+            "\nType: %s\\help %s to help command.\n\
+Type: %s\\getonline %s to show active user.\n\
+Type: %s\\to <username>%s to send message to them.\n",
+            GREEN, RED, GREEN, RED, GREEN, RED);
+                send_system_message(sockfd, msg);
+
 			} else if(state == 2){ // dang nhap tren may khac
 				send_message(sockfd, "2");
 			} else send_message(sockfd, "0"); // login failed
