@@ -338,6 +338,7 @@ void process_client_activity(int sockfd, char message[MSG_SIZE]) {
                 strcpy(clients[i].name, middle_str); // rename to username login
                 sleep(1);
 	            send_active_clients(sockfd);
+	            sleep(1);
                 sprintf(msg,
             "\nType: %s\\help %s to help command.\n\
 Type: %s\\getonline %s to show active user.\n\
